@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:morokoshi_qr/orderscreen.dart';
 import "display_qr.dart";
 
 void main() {
@@ -49,18 +50,18 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  // int _counter = 0;
 
-  void _incrementCounter() {
+  /* void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      _counter++;
+      // _counter++;
     });
-  }
+  } */
 
   @override
   Widget build(BuildContext context) {
@@ -97,23 +98,52 @@ class _MyHomePageState extends State<MyHomePage> {
             // horizontal).
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              const Text(
+             /*  const Text(
                 'You have pushed the button this many times:',
               ),
               Text(
                 '$_counter',
                 style: Theme.of(context).textTheme.headline4,
-              ),
-              const DisplayQRContainer(),
+              ), */
+              // const DisplayQRContainer(),
+              FoodWidgets(
+                foods: [
+                  FoodInfo(
+                    unitPrice: 30,
+                    name: "Hideさん",
+                    imagePath: "images/hide4063.png",
+                  ),
+                  FoodInfo(
+                    unitPrice: 20,
+                    name: "Hideさん2",
+                    imagePath: "images/hide4063.png",
+                  ),
+                  FoodInfo(
+                    unitPrice: 15,
+                    name: "Hideさん3",
+                    imagePath: "images/hide4063.png",
+                  ),
+                  FoodInfo(
+                    unitPrice: 3,
+                    name: "Hideさん4",
+                    imagePath: "images/hide4063.png",
+                  ),
+                  FoodInfo(
+                    unitPrice: 2,
+                    name: "Hideさん5",
+                    imagePath: "images/hide4063.png",
+                  ),
+                ],
+              )
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      /* floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),  */// This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
