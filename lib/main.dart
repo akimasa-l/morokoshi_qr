@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:morokoshi_qr/orderscreen.dart';
 // import "firebase_options.dart";
 import "package:firebase_core/firebase_core.dart";
-import "package:cloud_firestore/cloud_firestore.dart";
+import "settingscreen.dart";
 import 'package:adaptive_navigation/adaptive_navigation.dart';
 
 void main() async {
@@ -65,12 +65,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final Stream<QuerySnapshot<Map<String, dynamic>>> _usersStream =
-      FirebaseFirestore.instance.collection('foodInfo').snapshots();
   int _selectedIndex = 0;
-  static const  _destination = <AdaptiveScaffoldDestination>[
-    AdaptiveScaffoldDestination(title: "Home", icon: Icons.home),
+  static const _destination = <AdaptiveScaffoldDestination>[
     AdaptiveScaffoldDestination(title: "Pay", icon: Icons.payment),
+    AdaptiveScaffoldDestination(title: "Settings", icon: Icons.settings),
   ];
   // int _counter = 0;
 
@@ -94,110 +92,15 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return AdaptiveNavigationScaffold(
-      destinations: _destination,
-      selectedIndex: _selectedIndex,
-      onDestinationSelected:(int selectedIndex)=>setState(()=>_selectedIndex=selectedIndex),
-      appBar: AdaptiveAppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: SingleChildScrollView(
-          child: Column(
-            // Column is also a layout widget. It takes a list of children and
-            // arranges them vertically. By default, it sizes itself to fit its
-            // children horizontally, and tries to be as tall as its parent.
-            //
-            // Invoke "debug painting" (press "p" in the console, choose the
-            // "Toggle Debug Paint" action from the Flutter Inspector in Android
-            // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-            // to see the wireframe for each widget.
-            //
-            // Column has various properties to control how it sizes itself and
-            // how it positions its children. Here we use mainAxisAlignment to
-            // center the children vertically; the main axis here is the vertical
-            // axis because Columns are vertical (the cross axis would be
-            // horizontal).
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              /*  const Text(
-                'You have pushed the button this many times:',
-              ),
-              Text(
-                '$_counter',
-                style: Theme.of(context).textTheme.headline4,
-              ), */
-              // const DisplayQRContainer(),
-              /* FoodWidgets(
-                foods: [
-                  FoodInfo(
-                    unitPrice: 30,
-                    name: "Hideさん",
-                    imagePath: "images/hide4063.png",
-                  ),
-                  FoodInfo(
-                    unitPrice: 20,
-                    name: "Hideさん2",
-                    imagePath: "images/hide4063.png",
-                  ),
-                  FoodInfo(
-                    unitPrice: 15,
-                    name: "Hideさん3",
-                    imagePath: "images/hide4063.png",
-                  ),
-                  FoodInfo(
-                    unitPrice: 3,
-                    name: "Hideさん4",
-                    imagePath: "images/hide4063.png",
-                  ),
-                  FoodInfo(
-                    unitPrice: 2,
-                    name: "Hideさん5",
-                    imagePath: "images/hide4063.png",
-                  ),
-                  FoodInfo.fromMap({
-                    "unitPrice": 30,
-                    "name": "Hideさん",
-                    "imagePath": "images/hide4063.png",
-                  }),
-                ],
-              ), */
-              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: _usersStream,
-                  builder: (
-                    BuildContext context,
-                    AsyncSnapshot<QuerySnapshot> snapshot,
-                  ) {
-                    if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    }
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Text("Loading");
-                    }
-                    return FoodWidgets(
-                      foods: <FoodInfo>[
-                        for (final document in snapshot.data!.docs)
-                          FoodInfo.fromMap(
-                              document.data() as Map<String, dynamic>),
-                      ],
-                    );
-                    /* return Column(children: <Widget>[
-                      for (final document in snapshot.data!.docs)
-                        Text(document.data().toString()),
-                    ]); */
-                  }),
-            ],
-          ),
+        destinations: _destination,
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (int selectedIndex) =>
+            setState(() => _selectedIndex = selectedIndex),
+        appBar: AdaptiveAppBar(
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          title: Text(widget.title),
         ),
-      ),
-      /* floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),  */ // This trailing comma makes auto-formatting nicer for build methods.
-    );
+        body: [const CreatePayment(), const Settings()][_selectedIndex]);
   }
 }

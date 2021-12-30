@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import 'paypayclasses.dart';
 import "display_qr.dart";
+import "package:cloud_firestore/cloud_firestore.dart";
 
 class FoodInfo {
   int _count;
@@ -171,72 +172,74 @@ class _FoodWidgetsState extends State<FoodWidgets> {
               ),
           ],
         ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: DataTable(
-            columns: const <DataColumn>[
-              DataColumn(
-                label: Text("商品名"),
-              ),
-              DataColumn(
-                label: Text("単価"),
-                numeric: true,
-              ),
-              DataColumn(
-                label: Text("個数"),
-                numeric: true,
-              ),
-              DataColumn(
-                label: Text("合計"),
-                numeric: true,
-              ),
-            ],
-            rows: <DataRow>[
-              for (final foodInfo in _foods)
-                if (foodInfo.count > 0)
-                  DataRow(
-                    cells: <DataCell>[
-                      DataCell(
-                        Text(foodInfo.name),
-                      ),
-                      DataCell(
-                        Text('${foodInfo.unitPrice}円'),
-                      ),
-                      DataCell(
-                        Text('${foodInfo.count}'),
-                        // showEditIcon: true,
-                        onTap: () {
-                          setState(() {
-                            foodInfo.count = 0;
-                          });
-                        },
-                      ),
-                      DataCell(
-                        Text('${foodInfo.unitPrice * foodInfo.count}円'),
-                      ),
-                    ],
-                  ),
-              DataRow(
-                cells: <DataCell>[
-                  const DataCell(
-                    Text('合計'),
-                  ),
-                  const DataCell(
-                    Text('-'),
-                  ),
-                  DataCell(
-                    Text(
-                      '${_foods.fold(0, (int a, FoodInfo b) => a + b.count)}個',
-                    ), //これGitHub Copilotが書いてくれたんだけど　すげえ
-                  ),
-                  DataCell(
-                    Text(
-                      '${amount = _foods.fold(0, (int a, FoodInfo b) => a + b.unitPrice * b.count)}円',
-                    ), //これも　プログラマーはもういらないわ
-                  ),
-                ],
-              ),
-            ],
+        FittedBox(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: DataTable(
+              columns: const <DataColumn>[
+                DataColumn(
+                  label: Text("商品名"),
+                ),
+                DataColumn(
+                  label: Text("単価"),
+                  numeric: true,
+                ),
+                DataColumn(
+                  label: Text("個数"),
+                  numeric: true,
+                ),
+                DataColumn(
+                  label: Text("合計"),
+                  numeric: true,
+                ),
+              ],
+              rows: <DataRow>[
+                for (final foodInfo in _foods)
+                  if (foodInfo.count > 0)
+                    DataRow(
+                      cells: <DataCell>[
+                        DataCell(
+                          Text(foodInfo.name),
+                        ),
+                        DataCell(
+                          Text('${foodInfo.unitPrice}円'),
+                        ),
+                        DataCell(
+                          Text('${foodInfo.count}'),
+                          // showEditIcon: true,
+                          onTap: () {
+                            setState(() {
+                              foodInfo.count = 0;
+                            });
+                          },
+                        ),
+                        DataCell(
+                          Text('${foodInfo.unitPrice * foodInfo.count}円'),
+                        ),
+                      ],
+                    ),
+                DataRow(
+                  cells: <DataCell>[
+                    const DataCell(
+                      Text('合計'),
+                    ),
+                    const DataCell(
+                      Text('-'),
+                    ),
+                    DataCell(
+                      Text(
+                        '${_foods.fold(0, (int a, FoodInfo b) => a + b.count)}個',
+                      ), //これGitHub Copilotが書いてくれたんだけど　すげえ
+                    ),
+                    DataCell(
+                      Text(
+                        '${amount = _foods.fold(0, (int a, FoodInfo b) => a + b.unitPrice * b.count)}円',
+                      ), //これも　プログラマーはもういらないわ
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
         Padding(
@@ -271,6 +274,75 @@ class _FoodWidgetsState extends State<FoodWidgets> {
           child: Text("PayPayで支払う"),
         ),
       ],
+    );
+  }
+}
+
+class CreatePayment extends StatefulWidget {
+  const CreatePayment({Key? key}) : super(key: key);
+  @override
+  State<CreatePayment> createState() => _CreatePaymentState();
+}
+
+class _CreatePaymentState extends State<CreatePayment> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  final Stream<QuerySnapshot<Map<String, dynamic>>> _usersStream =
+      FirebaseFirestore.instance.collection('foodInfo').snapshots();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      // Center is a layout widget. It takes a single child and positions it
+      // in the middle of the parent.
+      child: SingleChildScrollView(
+        child: Column(
+          // Column is also a layout widget. It takes a list of children and
+          // arranges them vertically. By default, it sizes itself to fit its
+          // children horizontally, and tries to be as tall as its parent.
+          //
+          // Invoke "debug painting" (press "p" in the console, choose the
+          // "Toggle Debug Paint" action from the Flutter Inspector in Android
+          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
+          // to see the wireframe for each widget.
+          //
+          // Column has various properties to control how it sizes itself and
+          // how it positions its children. Here we use mainAxisAlignment to
+          // center the children vertically; the main axis here is the vertical
+          // axis because Columns are vertical (the cross axis would be
+          // horizontal).
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: _usersStream,
+                builder: (
+                  BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot,
+                ) {
+                  if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  }
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Text("Loading");
+                  }
+                  return FoodWidgets(
+                    foods: <FoodInfo>[
+                      for (final document in snapshot.data!.docs)
+                        FoodInfo.fromMap(
+                            document.data() as Map<String, dynamic>),
+                    ],
+                  );
+                  /* return Column(children: <Widget>[
+                      for (final document in snapshot.data!.docs)
+                        Text(document.data().toString()),
+                    ]); */
+                }),
+          ],
+        ),
+      ),
     );
   }
 }
