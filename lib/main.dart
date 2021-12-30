@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:morokoshi_qr/orderscreen.dart';
-import "display_qr.dart";
+// import "firebase_options.dart";
+import "package:firebase_core/firebase_core.dart";
+import "package:cloud_firestore/cloud_firestore.dart";
+import 'package:adaptive_navigation/adaptive_navigation.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  /* print(Firebase.apps);
+  if (Firebase.apps.isEmpty) {
+    //Unhandled Exception: [core/duplicate-app] A Firebase App named "[DEFAULT]" already existsがおこらないようになる
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } else {
+    Firebase.app();
+  } */
+  await Firebase.initializeApp();
+  // print(Firebase.app().name);
   runApp(const MyApp());
 }
 
@@ -50,6 +65,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final Stream<QuerySnapshot<Map<String, dynamic>>> _usersStream =
+      FirebaseFirestore.instance.collection('foodInfo').snapshots();
+  int _selectedIndex = 0;
+  static const  _destination = <AdaptiveScaffoldDestination>[
+    AdaptiveScaffoldDestination(title: "Home", icon: Icons.home),
+    AdaptiveScaffoldDestination(title: "Pay", icon: Icons.payment),
+  ];
   // int _counter = 0;
 
   /* void _incrementCounter() {
@@ -71,8 +93,11 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
+    return AdaptiveNavigationScaffold(
+      destinations: _destination,
+      selectedIndex: _selectedIndex,
+      onDestinationSelected:(int selectedIndex)=>setState(()=>_selectedIndex=selectedIndex),
+      appBar: AdaptiveAppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
@@ -98,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
             // horizontal).
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-             /*  const Text(
+              /*  const Text(
                 'You have pushed the button this many times:',
               ),
               Text(
@@ -106,7 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: Theme.of(context).textTheme.headline4,
               ), */
               // const DisplayQRContainer(),
-              FoodWidgets(
+              /* FoodWidgets(
                 foods: [
                   FoodInfo(
                     unitPrice: 30,
@@ -133,8 +158,37 @@ class _MyHomePageState extends State<MyHomePage> {
                     name: "Hideさん5",
                     imagePath: "images/hide4063.png",
                   ),
+                  FoodInfo.fromMap({
+                    "unitPrice": 30,
+                    "name": "Hideさん",
+                    "imagePath": "images/hide4063.png",
+                  }),
                 ],
-              )
+              ), */
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: _usersStream,
+                  builder: (
+                    BuildContext context,
+                    AsyncSnapshot<QuerySnapshot> snapshot,
+                  ) {
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    }
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Text("Loading");
+                    }
+                    return FoodWidgets(
+                      foods: <FoodInfo>[
+                        for (final document in snapshot.data!.docs)
+                          FoodInfo.fromMap(
+                              document.data() as Map<String, dynamic>),
+                      ],
+                    );
+                    /* return Column(children: <Widget>[
+                      for (final document in snapshot.data!.docs)
+                        Text(document.data().toString()),
+                    ]); */
+                  }),
             ],
           ),
         ),
@@ -143,7 +197,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ),  */// This trailing comma makes auto-formatting nicer for build methods.
+      ),  */ // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

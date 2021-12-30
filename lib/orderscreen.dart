@@ -12,6 +12,17 @@ class FoodInfo {
     required this.name,
     required this.imagePath,
   }) : _count = count;
+  FoodInfo.fromMap(Map<String, dynamic> map)
+      : assert(map['unitPrice'] != null),
+        assert(map['name'] != null),
+        assert(map['imagePath'] != null),
+        assert(map['name'] is String),
+        assert(map['imagePath'] is String),
+        assert(map['unitPrice'] is int),
+        _count = 0,
+        unitPrice = map['unitPrice'],
+        name = map['name'],
+        imagePath = map['imagePath'];
   int get count => _count;
   set count(int after) {
     if (after >= 0) {
