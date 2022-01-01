@@ -24,8 +24,17 @@ class DisplayQRContainer extends StatelessWidget {
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: SingleChildScrollView(
-          child: DisplayQR(
-            createQRCodeBody: createQRCodeBody,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Hero(
+                tag: "PayPay",
+                child: Image.asset("images/paypay.png"),
+              ),
+              DisplayQR(
+                createQRCodeBody: createQRCodeBody,
+              ),
+            ],
           ),
         ),
       ),

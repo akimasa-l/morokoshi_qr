@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import 'paypayclasses.dart';
 import "display_qr.dart";
+import 'dart:math';
 import "package:cloud_firestore/cloud_firestore.dart";
 
 class FoodInfo {
@@ -63,6 +64,7 @@ class FoodWidget extends StatelessWidget {
       // height: 300,
       width: 300,
       child: Card(
+        elevation: 8.0,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
@@ -84,7 +86,7 @@ class FoodWidget extends StatelessWidget {
                   ],
                 ),
               ),
-              Image.asset(
+              Image.network(
                 foodInfo.imagePath,
                 // width: 100,
                 // height: 100,
@@ -96,6 +98,7 @@ class FoodWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     FloatingActionButton(
+                      heroTag: Random().nextDouble().toString() ,// uniqueなheroTagをつけなきゃいけないらしい
                       child: const Icon(
                         Icons.remove,
                         color: Colors.black,
@@ -108,6 +111,7 @@ class FoodWidget extends StatelessWidget {
                       style: Theme.of(context).textTheme.headline6,
                     ),
                     FloatingActionButton(
+                      heroTag: Random().nextDouble().toString() ,// uniqueなheroTagをつけなきゃいけないらしい
                       child: const Icon(
                         Icons.add,
                         color: Colors.black,
@@ -266,7 +270,10 @@ class _FoodWidgetsState extends State<FoodWidgets> {
                 ),
               );
             },
-            icon: Image.asset("images/paypay.png"),
+            icon: Hero(
+              tag: "PayPay",
+              child: Image.asset("images/paypay.png"),
+            ),
           ),
         ),
         const Padding(
