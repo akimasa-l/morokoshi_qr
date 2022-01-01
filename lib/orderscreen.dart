@@ -2,29 +2,57 @@ import "package:flutter/material.dart";
 import 'paypayclasses.dart';
 import "display_qr.dart";
 import 'dart:math';
+import "morokoshi_cached_network_image.dart";
 import "package:cloud_firestore/cloud_firestore.dart";
 
 class FoodInfo {
-  int _count;
   final int unitPrice;
-  final String name, imagePath;
-  FoodInfo({
-    int count = 0,
+  final String name, imageUrl;
+  const FoodInfo({
     required this.unitPrice,
     required this.name,
-    required this.imagePath,
-  }) : _count = count;
+    required this.imageUrl,
+  });
   FoodInfo.fromMap(Map<String, dynamic> map)
       : assert(map['unitPrice'] != null),
         assert(map['name'] != null),
-        assert(map['imagePath'] != null),
+        assert(map['imageUrl'] != null),
         assert(map['name'] is String),
-        assert(map['imagePath'] is String),
+        assert(map['imageUrl'] is String),
         assert(map['unitPrice'] is int),
-        _count = 0,
         unitPrice = map['unitPrice'],
         name = map['name'],
-        imagePath = map['imagePath'];
+        imageUrl = map['imageUrl'];
+
+  Map<String, dynamic> toMap() {
+    return {
+      'unitPrice': unitPrice,
+      'name': name,
+      'imageUrl': imageUrl,
+    };
+  }
+}
+
+class FoodCount {
+  int _count;
+  final FoodInfo foodInfo;
+  FoodCount({
+    int count = 0,
+    required this.foodInfo,
+  }) : _count = count;
+  FoodCount.fromMap(Map<String, dynamic> map)
+      : assert(map['unitPrice'] != null),
+        assert(map['name'] != null),
+        assert(map['imageUrl'] != null),
+        assert(map['name'] is String),
+        assert(map['imageUrl'] is String),
+        assert(map['unitPrice'] is int),
+        _count = 0,
+        foodInfo = FoodInfo(
+          unitPrice: map['unitPrice'],
+          name: map['name'],
+          imageUrl: map['imageUrl'],
+        );
   int get count => _count;
   set count(int after) {
     if (after >= 0) {
@@ -39,18 +67,18 @@ class FoodInfo {
 
   OrderItem toOrderItem() {
     return OrderItem(
-      name: name,
-      unitPrice: MoneyAmount(amount: unitPrice),
+      name: foodInfo.name,
+      unitPrice: MoneyAmount(amount: foodInfo.unitPrice),
       quantity: count,
     );
   }
 }
 
 class FoodWidget extends StatelessWidget {
-  final FoodInfo foodInfo;
+  final FoodCount foodCount;
   const FoodWidget({
     Key? key,
-    required this.foodInfo,
+    required this.foodCount,
     required this.increment,
     required this.decrement,
   }) : super(key: key);
@@ -62,12 +90,13 @@ class FoodWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       // height: 300,
-      width: 300,
+      width: 250,
       child: Card(
         elevation: 8.0,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
+            crossAxisAlignment : CrossAxisAlignment.stretch,
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -76,20 +105,18 @@ class FoodWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      foodInfo.name,
+                      foodCount.foodInfo.name,
                       style: Theme.of(context).textTheme.headline6,
                     ),
                     Text(
-                      '${foodInfo.unitPrice}円',
+                      '${foodCount.foodInfo.unitPrice}円',
                       // style: Theme.of(context).textTheme.headline6,
                     ),
                   ],
                 ),
               ),
-              Image.network(
-                foodInfo.imagePath,
-                // width: 100,
-                // height: 100,
+              MorokoshiCachedNetworkImage(
+                imageUrl: foodCount.foodInfo.imageUrl,
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -98,7 +125,9 @@ class FoodWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     FloatingActionButton(
-                      heroTag: Random().nextDouble().toString() ,// uniqueなheroTagをつけなきゃいけないらしい
+                      heroTag: Random()
+                          .nextDouble()
+                          .toString(), // uniqueなheroTagをつけなきゃいけないらしい
                       child: const Icon(
                         Icons.remove,
                         color: Colors.black,
@@ -107,11 +136,13 @@ class FoodWidget extends StatelessWidget {
                       backgroundColor: Colors.white,
                     ),
                     Text(
-                      '${foodInfo.count}',
+                      '${foodCount.count}',
                       style: Theme.of(context).textTheme.headline6,
                     ),
                     FloatingActionButton(
-                      heroTag: Random().nextDouble().toString() ,// uniqueなheroTagをつけなきゃいけないらしい
+                      heroTag: Random()
+                          .nextDouble()
+                          .toString(), // uniqueなheroTagをつけなきゃいけないらしい
                       child: const Icon(
                         Icons.add,
                         color: Colors.black,
@@ -135,13 +166,13 @@ class FoodWidgets extends StatefulWidget {
     Key? key,
     required this.foods,
   }) : super(key: key);
-  final List<FoodInfo> foods;
+  final List<FoodCount> foods;
   @override
   State<FoodWidgets> createState() => _FoodWidgetsState();
 }
 
 class _FoodWidgetsState extends State<FoodWidgets> {
-  late final List<FoodInfo> _foods;
+  late final List<FoodCount> _foods;
   @override
   void initState() {
     super.initState();
@@ -160,17 +191,17 @@ class _FoodWidgetsState extends State<FoodWidgets> {
           runAlignment: WrapAlignment.spaceAround,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: <Widget>[
-            for (final foodInfo in _foods)
+            for (final foodCount in _foods)
               FoodWidget(
-                foodInfo: foodInfo,
+                foodCount: foodCount,
                 increment: () {
                   setState(() {
-                    foodInfo.count++;
+                    foodCount.count++;
                   });
                 },
                 decrement: () {
                   setState(() {
-                    foodInfo.count--;
+                    foodCount.count--;
                   });
                 },
               ),
@@ -198,27 +229,28 @@ class _FoodWidgetsState extends State<FoodWidgets> {
                 ),
               ],
               rows: <DataRow>[
-                for (final foodInfo in _foods)
-                  if (foodInfo.count > 0)
+                for (final foodCount in _foods)
+                  if (foodCount.count > 0)
                     DataRow(
                       cells: <DataCell>[
                         DataCell(
-                          Text(foodInfo.name),
+                          Text(foodCount.foodInfo.name),
                         ),
                         DataCell(
-                          Text('${foodInfo.unitPrice}円'),
+                          Text('${foodCount.foodInfo.unitPrice}円'),
                         ),
                         DataCell(
-                          Text('${foodInfo.count}'),
+                          Text('${foodCount.count}'),
                           // showEditIcon: true,
                           onTap: () {
                             setState(() {
-                              foodInfo.count = 0;
+                              foodCount.count = 0;
                             });
                           },
                         ),
                         DataCell(
-                          Text('${foodInfo.unitPrice * foodInfo.count}円'),
+                          Text(
+                              '${foodCount.foodInfo.unitPrice * foodCount.count}円'),
                         ),
                       ],
                     ),
@@ -232,12 +264,12 @@ class _FoodWidgetsState extends State<FoodWidgets> {
                     ),
                     DataCell(
                       Text(
-                        '${_foods.fold(0, (int a, FoodInfo b) => a + b.count)}個',
+                        '${_foods.fold(0, (int a, FoodCount b) => a + b.count)}個',
                       ), //これGitHub Copilotが書いてくれたんだけど　すげえ
                     ),
                     DataCell(
                       Text(
-                        '${amount = _foods.fold(0, (int a, FoodInfo b) => a + b.unitPrice * b.count)}円',
+                        '${amount = _foods.fold(0, (int a, FoodCount b) => a + b.foodInfo.unitPrice * b.count)}円',
                       ), //これも　プログラマーはもういらないわ
                     ),
                   ],
@@ -259,8 +291,8 @@ class _FoodWidgetsState extends State<FoodWidgets> {
                       merchantPaymentId:
                           DateTime.now().millisecondsSinceEpoch.toString(),
                       orderItems: _foods
-                          .where((FoodInfo f) => f.count > 0)
-                          .map((FoodInfo f) => f.toOrderItem())
+                          .where((FoodCount f) => f.count > 0)
+                          .map((FoodCount f) => f.toOrderItem())
                           .toList(),
                       amount: MoneyAmount(amount: amount),
                       requestedAt:
@@ -297,8 +329,15 @@ class _CreatePaymentState extends State<CreatePayment> {
     super.initState();
   }
 
-  final Stream<QuerySnapshot<Map<String, dynamic>>> _usersStream =
-      FirebaseFirestore.instance.collection('foodInfo').snapshots();
+  final Stream<QuerySnapshot<FoodCount>> _usersStream =
+      FirebaseFirestore.instance
+          .collection('foodInfo')
+          .withConverter<FoodCount>(
+            fromFirestore: (snapshot, _) =>
+                FoodCount(foodInfo: FoodInfo.fromMap(snapshot.data()!)),
+            toFirestore: (foodCount, _) => foodCount.foodInfo.toMap(),
+          )
+          .snapshots();
 
   @override
   Widget build(BuildContext context) {
@@ -323,30 +362,28 @@ class _CreatePaymentState extends State<CreatePayment> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                stream: _usersStream,
-                builder: (
-                  BuildContext context,
-                  AsyncSnapshot<QuerySnapshot> snapshot,
-                ) {
-                  if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  }
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Text("Loading");
-                  }
-                  return FoodWidgets(
-                    foods: <FoodInfo>[
-                      for (final document in snapshot.data!.docs)
-                        FoodInfo.fromMap(
-                            document.data() as Map<String, dynamic>),
-                    ],
-                  );
-                  /* return Column(children: <Widget>[
-                      for (final document in snapshot.data!.docs)
-                        Text(document.data().toString()),
-                    ]); */
-                }),
+            StreamBuilder<QuerySnapshot<FoodCount>>(
+              stream: _usersStream,
+              builder: (
+                BuildContext context,
+                AsyncSnapshot<QuerySnapshot<FoodCount>> snapshot,
+              ) {
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Text("Loading");
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Text("データ消えてるっぽいです。ごめんなさい。");
+                }
+                return FoodWidgets(
+                  foods: <FoodCount>[
+                    for (final document in snapshot.data!.docs) document.data(),
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),

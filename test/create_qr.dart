@@ -1,8 +1,9 @@
 import 'package:morokoshi_qr/paypayclasses.dart';
 import "package:morokoshi_qr/paypaysecret.dart";
+import "package:flutter/material.dart";
 
 Future<void> main() async {
-  print(await payPayClient.createQRCode(
+  debugPrint(await payPayClient.createQRCode(
     CreateQRCodeBody(
       merchantPaymentId: "aaaaa",
       amount: const MoneyAmount(amount: 4),
