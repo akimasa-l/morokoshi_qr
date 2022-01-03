@@ -29,7 +29,7 @@ class DisplayQRContainer extends StatelessWidget {
             children: [
               Hero(
                 tag: "PayPay",
-                child: Image.asset("images/paypay.png"),
+                child: Image.asset("images/paypay.png", width: 200),
               ),
               DisplayQR(
                 createQRCodeBody: createQRCodeBody,
@@ -60,60 +60,40 @@ class _DisplayQRState extends State<DisplayQR> {
     _createQRCodeBody = widget.createQRCodeBody;
   }
 
-  bool isQRCodeCreated = false;
-  String url = "";
-  String response = "まだレスポンスが帰ってきてないかも";
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        ElevatedButton(
-          onPressed: () async {
-            final String res = await payPayClient.createQRCode(
-              /* CreateQRCodeBody(
-                merchantPaymentId:
-                    DateTime.now().millisecondsSinceEpoch.toString(),
-                amount: const MoneyAmount(amount: 5),
-                requestedAt: (DateTime.now().millisecondsSinceEpoch ~/ 1000),
-                orderItems: const [
-                  OrderItem(
-                    name: "nashio",
-                    quantity: 2,
-                    unitPrice: MoneyAmount(amount: 2),
-                  ),
-                  OrderItem(
-                    name: "morokoshi",
-                    quantity: 1,
-                    unitPrice: MoneyAmount(amount: 1),
-                  ),
-                ],
-              ), */
-              _createQRCodeBody,
+    return FutureBuilder<String>(
+      future: payPayClient.createQRCode(
+        _createQRCodeBody,
+      ), // a previously-obtained Future<String> or null
+      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (snapshot.hasData) {
+          final response = snapshot.data!;
+          try {
+            final url = json.decode(response)["data"]["url"];
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: QrImage(
+                size: 300.0,
+                data: url,
+                semanticsLabel: "PayPayの支払いQRコード",
+              ),
             );
-            setState(() {
-              response = res;
-              url = json.decode(response)["data"]["url"];
-              isQRCodeCreated = true;
-            });
-          },
-          child: const Text("Submit"),
-        ),
-        Text(
-          response,
-          textAlign: TextAlign.center,
-        ),
-        if (isQRCodeCreated)
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: QrImage(
-              size: 300.0,
-              data: url,
-              semanticsLabel: "PayPayの支払いQRコード",
-            ),
-          ),
-      ],
+          } catch (e) {
+            return Text("Response: $response\nError: ${e.toString()}");
+          }
+        }
+
+        return Column(
+          children: const <Widget>[
+            CircularProgressIndicator(),
+            Text("Loading..."),
+          ],
+        );
+      },
     );
   }
 }
+
