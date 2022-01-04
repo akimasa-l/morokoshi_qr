@@ -244,7 +244,7 @@ class PayPayOPA {
     required String nonce,
     required String epoch,
     String requestBody = "",
-    String contentType = "empty",
+    String contentType = "",
     required String requestUrl,
   }) {
     final String hash = generateHash(
@@ -256,7 +256,7 @@ class PayPayOPA {
       hash: hash,
       requestUrl: requestUrl,
       epoch: epoch,
-      contentType: contentType,
+      contentType: contentType.isEmpty?"empty":contentType,
       httpMethod: "POST",
     );
     return generateAuthHeader(

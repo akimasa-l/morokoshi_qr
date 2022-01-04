@@ -38,7 +38,7 @@ class DisplayQRContainer extends StatelessWidget {
               // 戻るボタン
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamedAndRemoveUntil(context, "/",(_)=>false);
+                  Navigator.pushNamedAndRemoveUntil(context, "/", (_) => false);
                 },
                 child: const Text("次のお支払いに進む"),
               )
@@ -71,14 +71,22 @@ class DisplayQR extends StatelessWidget {
           final response = snapshot.data!;
           try {
             final url = json.decode(response)["data"]["url"];
-            return Padding(
-              padding: const EdgeInsets.all(100.0),
-              child: QrImage(
-                size: 300.0,
-                data: url,
-                semanticsLabel: "PayPayの支払いQRコード",
-                embeddedImage: const AssetImage("images/paypay.png"),
-              ),
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(100.0),
+                  child: QrImage(
+                    size: 300.0,
+                    data: url,
+                    semanticsLabel: "PayPayの支払いQRコード",
+                    embeddedImage: const AssetImage("images/paypay.png"),
+                  ),
+                ),
+                PaymentDetailsScreen(
+                  merchantPaymentId: createQRCodeBody.merchantPaymentId,
+                )
+              ],
             );
           } catch (e) {
             return Text("Response: $response\nError: ${e.toString()}");
@@ -105,15 +113,33 @@ class DisplayQR extends StatelessWidget {
 }
 
 class PaymentDetailsScreen extends StatelessWidget {
-  const PaymentDetailsScreen({Key? key}) : super(key: key);
+  final String merchantPaymentId;
+  const PaymentDetailsScreen({
+    Key? key,
+    required this.merchantPaymentId,
+  }) : super(key: key);
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const Text("aa");
+    return StreamBuilder<String>(
+      stream: PaymentDetailsStream(merchantPaymentId: merchantPaymentId).stream,
+      builder: (
+        BuildContext context,
+        AsyncSnapshot<String> snapshot,
+      ) {
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        }
+        if (snapshot.hasData) {
+          debugPrint(snapshot.data!);
+          return Text(snapshot.data!);
+        }
+        return const Text("Loading");
+      },
+    );
   }
 }
-
 
 class PaymentDetailsStream {
   final String merchantPaymentId;
