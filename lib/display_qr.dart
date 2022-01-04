@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import "paypayclasses.dart";
 import 'package:qr_flutter/qr_flutter.dart';
+import "dart:async";
 import "dart:convert";
 import "paypaysecret.dart";
 
@@ -27,13 +28,20 @@ class DisplayQRContainer extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Hero(
-                tag: "PayPay",
-                child: Image.asset("images/paypay.png", width: 200),
-              ),
               DisplayQR(
                 createQRCodeBody: createQRCodeBody,
               ),
+              Text(
+                "お支払い金額 : ${createQRCodeBody.amount.amount}円",
+                style: Theme.of(context).textTheme.headline4,
+              ),
+              // 戻るボタン
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(context, "/",(_)=>false);
+                },
+                child: const Text("次のお支払いに進む"),
+              )
             ],
           ),
         ),
@@ -42,29 +50,19 @@ class DisplayQRContainer extends StatelessWidget {
   }
 }
 
-class DisplayQR extends StatefulWidget {
+class DisplayQR extends StatelessWidget {
   final CreateQRCodeBody createQRCodeBody;
   const DisplayQR({
     Key? key,
     required this.createQRCodeBody,
   }) : super(key: key);
-  @override
-  State<DisplayQR> createState() => _DisplayQRState();
-}
 
-class _DisplayQRState extends State<DisplayQR> {
-  late final CreateQRCodeBody _createQRCodeBody;
-  @override
-  void initState() {
-    super.initState();
-    _createQRCodeBody = widget.createQRCodeBody;
-  }
-
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
       future: payPayClient.createQRCode(
-        _createQRCodeBody,
+        createQRCodeBody,
       ), // a previously-obtained Future<String> or null
       builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
         if (snapshot.hasError) {
@@ -74,22 +72,31 @@ class _DisplayQRState extends State<DisplayQR> {
           try {
             final url = json.decode(response)["data"]["url"];
             return Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(100.0),
               child: QrImage(
                 size: 300.0,
                 data: url,
                 semanticsLabel: "PayPayの支払いQRコード",
+                embeddedImage: const AssetImage("images/paypay.png"),
               ),
             );
           } catch (e) {
             return Text("Response: $response\nError: ${e.toString()}");
           }
         }
-
+        // それ以外のとき
         return Column(
-          children: const <Widget>[
-            CircularProgressIndicator(),
-            Text("Loading..."),
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Hero(
+              tag: "PayPay",
+              child: Image.asset("images/paypay.png", width: 150),
+            ),
+            const CircularProgressIndicator(),
+            Text(
+              "Loading...",
+              style: Theme.of(context).textTheme.headline4,
+            ),
           ],
         );
       },
@@ -97,3 +104,31 @@ class _DisplayQRState extends State<DisplayQR> {
   }
 }
 
+class PaymentDetailsScreen extends StatelessWidget {
+  const PaymentDetailsScreen({Key? key}) : super(key: key);
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return const Text("aa");
+  }
+}
+
+
+class PaymentDetailsStream {
+  final String merchantPaymentId;
+  final Duration duration;
+  PaymentDetailsStream({
+    required this.merchantPaymentId,
+    this.duration = const Duration(seconds: 10),
+  }) {
+    Timer.periodic(duration, (_) async {
+      final response = await payPayClient.getPaymentDetails(
+        merchantPaymentId: merchantPaymentId,
+      );
+      _controller.sink.add(response);
+    });
+  }
+  final _controller = StreamController<String>();
+  Stream<String> get stream => _controller.stream;
+}

@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import 'package:cached_network_image/cached_network_image.dart';
 import "orderscreen.dart";
 import "morokoshi_cached_network_image.dart";
+import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import "package:cloud_firestore/cloud_firestore.dart";
 
 class Settings extends StatefulWidget {
@@ -42,21 +43,23 @@ class _SettingsState extends State<Settings> {
           return const Text("データ消えてるっぽいです。ごめんなさい。");
         }
         return Center(
-          child: Wrap(
-            alignment: WrapAlignment.spaceEvenly,
-            runAlignment: WrapAlignment.spaceEvenly,
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: <Widget>[
-              // FoodSettings(),
-              for (final document in snapshot.data!.docs)
-                FoodSettings(
-                  document: document.reference,
-                  foodInfo: document.data(),
-                ),
-              const AddNewFood(),
-            ],
+          child: SingleChildScrollView(
+            child: Wrap(
+              alignment: WrapAlignment.spaceEvenly,
+              runAlignment: WrapAlignment.spaceEvenly,
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: <Widget>[
+                // FoodSettings(),
+                for (final document in snapshot.data!.docs)
+                  FoodSettings(
+                    document: document.reference,
+                    foodInfo: document.data(),
+                  ),
+                const AddNewFood(),
+              ],
+            ),
           ),
         );
       },
@@ -126,9 +129,12 @@ class AddNewFood extends StatelessWidget {
               "新しい商品を追加する",
               style: Theme.of(context).textTheme.headline6,
             ),
-            const Icon(
-              Icons.add,
-              size: 50,
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Icon(
+                Icons.add,
+                size: 80,
+              ),
             ),
           ],
         ),
@@ -217,11 +223,38 @@ class _FoodSettingFormState extends State<FoodSettingForm> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),
+        actions: <Widget>[
+          IconButton(
+              onPressed: () {
+                showPlatformDialog(
+                  context: context,
+                  builder: (context) => PlatformAlertDialog(
+                    title: const Text("びっくり!"),
+                    content: const Text("本当に削除しますか？"),
+                    actions: <Widget>[
+                      PlatformDialogAction(
+                        child: const Text("やっぱやめとく..."),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      PlatformDialogAction(
+                        child: const Text("削除しちゃう!!"),
+                        onPressed: () async {
+                          await reference.delete();
+                          Navigator.of(context)
+                              .popUntil((route) => route.isFirst);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+              icon: const Icon(Icons.delete)),
+        ],
       ),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(24.0),
             child: Form(
               key: _formKey,
               child: Column(
@@ -303,7 +336,7 @@ class _FoodSettingFormState extends State<FoodSettingForm> {
                     },
                   ),
                   ElevatedButton(
-                    child: const Text("Save"),
+                    child: const Text("保存する"),
                     onPressed: () async {
                       final state = _formKey.currentState!;
                       if (state.validate()) {
@@ -314,6 +347,12 @@ class _FoodSettingFormState extends State<FoodSettingForm> {
                           imageUrl: imageUrl,
                         );
                         await reference.set(newFoodInfo);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("保存したよ～～～!!!!"),
+                          ),
+                        );
+                        Navigator.of(context).pop();
                       }
                     },
                   )
