@@ -256,7 +256,7 @@ class PayPayOPA {
       hash: hash,
       requestUrl: requestUrl,
       epoch: epoch,
-      contentType: contentType.isEmpty?"empty":contentType,
+      contentType: contentType.isEmpty ? "empty" : contentType,
       httpMethod: "POST",
     );
     return generateAuthHeader(
