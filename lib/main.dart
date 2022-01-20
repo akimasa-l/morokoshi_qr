@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:morokoshi_qr/orderscreen.dart';
 import "package:firebase_core/firebase_core.dart";
 import "settingscreen.dart";
+import 'firebase_options.dart';
 import 'package:adaptive_navigation/adaptive_navigation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  /* print(Firebase.apps);
+  // debugPrint(Firebase.apps);
   if (Firebase.apps.isEmpty) {
     //Unhandled Exception: [core/duplicate-app] A Firebase App named "[DEFAULT]" already existsがおこらないようになる
     await Firebase.initializeApp(
@@ -14,8 +15,8 @@ void main() async {
     );
   } else {
     Firebase.app();
-  } */
-  await Firebase.initializeApp();
+  }
+  // await Firebase.initializeApp();
   // print(Firebase.app().name);
   runApp(const MyApp());
 }
