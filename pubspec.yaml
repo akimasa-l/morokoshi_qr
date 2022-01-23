@@ -44,6 +44,7 @@ dependencies:
   adaptive_navigation: ^0.0.5
   cached_network_image: ^3.2.0
   flutter_platform_widgets: ^1.12.1
+  url_launcher: ^6.0.18
 
 dev_dependencies:
   flutter_test:
