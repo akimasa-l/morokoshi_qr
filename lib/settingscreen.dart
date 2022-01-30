@@ -5,34 +5,15 @@ import "morokoshi_cached_network_image.dart";
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import "package:cloud_firestore/cloud_firestore.dart";
 
-class Settings extends StatefulWidget {
-  const Settings({Key? key}) : super(key: key);
-  @override
-  State<Settings> createState() => _SettingsState();
-}
-
-class _SettingsState extends State<Settings> {
-  final Stream<QuerySnapshot<FoodInfo>> _usersStream =
-      FirebaseFirestore.instance
-          .collection('foodInfo')
-          .withConverter<FoodInfo>(
-            fromFirestore: (snapshot, _) => FoodInfo.fromMap(snapshot.data()!),
-            toFirestore: (foodInfo, _) => foodInfo.toMap(),
-          )
-          .snapshots();
-  @override
-  void initState() {
-    super.initState();
-  }
-
+class Settings extends StatelessWidget {
+  const Settings({Key? key, required this.foodInfoCollectionReference})
+      : super(key: key);
+  final CollectionReference<FoodInfo> foodInfoCollectionReference;
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot<FoodInfo>>(
-      stream: _usersStream,
-      builder: (
-        BuildContext context,
-        AsyncSnapshot<QuerySnapshot<FoodInfo>> snapshot,
-      ) {
+      stream: foodInfoCollectionReference.snapshots(),
+      builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         }
@@ -57,7 +38,9 @@ class _SettingsState extends State<Settings> {
                     document: document.reference,
                     foodInfo: document.data(),
                   ),
-                const AddNewFood(),
+                AddNewFood(
+                  foodInfoCollectionReference: foodInfoCollectionReference,
+                ),
               ],
             ),
           ),
@@ -89,27 +72,21 @@ class FoodSettingsBase extends StatelessWidget {
 }
 
 class AddNewFood extends StatelessWidget {
-  const AddNewFood({Key? key}) : super(key: key);
-
+  const AddNewFood({Key? key, required this.foodInfoCollectionReference})
+      : super(key: key);
+  final CollectionReference<FoodInfo> foodInfoCollectionReference;
+  static const foodInfo = FoodInfo(
+    imageUrl:
+        "https://drive.google.com/uc?id=1m8E3fZPj4k35zfCLhAHaV-Nsm8diFJNy",
+    name: "Hideさん",
+    unitPrice: 30,
+  );
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return FoodSettingsBase(
       onTap: () async {
-        const foodInfo = FoodInfo(
-          imageUrl:
-              "https://drive.google.com/uc?id=1m8E3fZPj4k35zfCLhAHaV-Nsm8diFJNy",
-          name: "Hideさん",
-          unitPrice: 30,
-        );
-        final reference = await FirebaseFirestore.instance
-            .collection('foodInfo')
-            .withConverter<FoodInfo>(
-              fromFirestore: (snapshot, _) =>
-                  FoodInfo.fromMap(snapshot.data()!),
-              toFirestore: (foodInfo, _) => foodInfo.toMap(),
-            )
-            .add(foodInfo);
+        final reference = await foodInfoCollectionReference.add(foodInfo);
         Navigator.push(
           context,
           MaterialPageRoute(

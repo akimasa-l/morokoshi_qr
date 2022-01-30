@@ -310,8 +310,9 @@ class _FoodWidgetsState extends State<FoodWidgets> {
                       MaterialPageRoute(
                         builder: (context) => DisplayQRContainer(
                           createQRCodeBody: CreateQRCodeBody(
-                            merchantPaymentId:
-                                DateTime.now().millisecondsSinceEpoch.toString(),
+                            merchantPaymentId: DateTime.now()
+                                .millisecondsSinceEpoch
+                                .toString(),
                             orderItems: _foods
                                 .where((FoodCount f) => f.count > 0)
                                 .map((FoodCount f) => f.toOrderItem())
@@ -342,36 +343,16 @@ class _FoodWidgetsState extends State<FoodWidgets> {
   }
 }
 
-class CreatePayment extends StatefulWidget {
-  const CreatePayment({Key? key}) : super(key: key);
-  @override
-  State<CreatePayment> createState() => _CreatePaymentState();
-}
-
-class _CreatePaymentState extends State<CreatePayment> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  final Stream<QuerySnapshot<FoodCount>> _usersStream =
-      FirebaseFirestore.instance
-          .collection('foodInfo')
-          .withConverter<FoodCount>(
-            fromFirestore: (snapshot, _) =>
-                FoodCount(foodInfo: FoodInfo.fromMap(snapshot.data()!)),
-            toFirestore: (foodCount, _) => foodCount.foodInfo.toMap(),
-          )
-          .snapshots();
+class CreatePayment extends StatelessWidget {
+  const CreatePayment({Key? key, required this.foodInfoCollectionReference})
+      : super(key: key);
+  final CollectionReference<FoodInfo> foodInfoCollectionReference;
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot<FoodCount>>(
-      stream: _usersStream,
-      builder: (
-        BuildContext context,
-        AsyncSnapshot<QuerySnapshot<FoodCount>> snapshot,
-      ) {
+    return StreamBuilder<QuerySnapshot<FoodInfo>>(
+      stream: foodInfoCollectionReference.snapshots(),
+      builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         }
@@ -383,7 +364,8 @@ class _CreatePaymentState extends State<CreatePayment> {
         }
         return FoodWidgets(
           foods: <FoodCount>[
-            for (final document in snapshot.data!.docs) document.data(),
+            for (final document in snapshot.data!.docs)
+              FoodCount(foodInfo: document.data()),
           ],
         );
       },

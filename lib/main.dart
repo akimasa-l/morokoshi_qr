@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:morokoshi_qr/orderscreen.dart';
 import "package:firebase_core/firebase_core.dart";
-import "settingscreen.dart";
+import "settingscreen.dart" as setting_screen;
 import 'firebase_options.dart';
+import "package:cloud_firestore/cloud_firestore.dart";
 import 'package:adaptive_navigation/adaptive_navigation.dart';
+import "shopsettingscreen.dart";
+import "morokoshi_stream_builder.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // debugPrint(Firebase.apps);
-  if (Firebase.apps.isEmpty) {
+  /* if (Firebase.apps.isEmpty) {
     //Unhandled Exception: [core/duplicate-app] A Firebase App named "[DEFAULT]" already existsがおこらないようになる
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
   } else {
     Firebase.app();
-  }
-  // await Firebase.initializeApp();
+  } */
+  await Firebase.initializeApp();
   // print(Firebase.app().name);
   runApp(const MyApp());
 }
@@ -64,11 +67,26 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+class UnloadedWidget extends StatelessWidget {
+  const UnloadedWidget(this.title, {Key? key}) : super(key: key);
+  final String title;
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Text(title),
+      ),
+    );
+  }
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
   static const _destination = <AdaptiveScaffoldDestination>[
     AdaptiveScaffoldDestination(title: "Pay", icon: Icons.payment),
     AdaptiveScaffoldDestination(title: "Settings", icon: Icons.settings),
+    AdaptiveScaffoldDestination(title: "Shops", icon: Icons.business),
   ];
   // int _counter = 0;
 
@@ -82,7 +100,15 @@ class _MyHomePageState extends State<MyHomePage> {
       // _counter++;
     });
   } */
-
+  final Stream<QuerySnapshot<Shop>> _shopsStream = FirebaseFirestore.instance
+      .collection('shops')
+      .withConverter<Shop>(
+        fromFirestore: (snapshot, _) => Shop.fromMap(snapshot.data()!),
+        toFirestore: (shop, _) => shop.toMap(),
+      )
+      .snapshots();
+  late CollectionReference<FoodInfo> _foodInfoCollectionReference;
+  int _selectedShopIndex = 0;
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -91,17 +117,76 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return AdaptiveNavigationScaffold(
-      destinations: _destination,
-      selectedIndex: _selectedIndex,
-      onDestinationSelected: (int selectedIndex) =>
-          setState(() => _selectedIndex = selectedIndex),
-      appBar: AdaptiveAppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: [const CreatePayment(), const Settings()][_selectedIndex],
+    return MorokoshiStreamBuilder<Shop>(
+      stream: _shopsStream,
+      builder: (context, snapshot) {
+        final _selectedShop = snapshot.data!.docs[_selectedShopIndex];
+        _foodInfoCollectionReference = _selectedShop.reference
+            .collection("foodInfo")
+            .withConverter<FoodInfo>(
+              fromFirestore: (snapshot, _) =>
+                  FoodInfo.fromMap(snapshot.data()!),
+              toFirestore: (foodInfo, _) => foodInfo.toMap(),
+            );
+        return AdaptiveNavigationScaffold(
+          destinations: _destination,
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: (selectedIndex) =>
+              setState(() => _selectedIndex = selectedIndex),
+          appBar: AdaptiveAppBar(
+            // Here we take the value from the MyHomePage object that was created by
+            // the App.build method, and use it to set our appbar title.
+            title: Text(
+              widget.title, /* style: const TextStyle(color: Colors.black) */
+            ),
+            // backgroundColor: Colors.white,
+            actions: <Widget>[
+              Center(
+                child: Text(
+                  _selectedShop.data().name,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: Theme.of(context).textTheme.subtitle2?.fontSize,
+                  ),
+                ),
+              ),
+              PopupMenuButton<int>(
+                initialValue: 0,
+                onSelected: (shopIndex) => setState(
+                  () {
+                    _selectedShopIndex = shopIndex;
+                    final _selectedShop =
+                        snapshot.data!.docs[_selectedShopIndex];
+                    _foodInfoCollectionReference = _selectedShop.reference
+                        .collection("foodInfo")
+                        .withConverter<FoodInfo>(
+                          fromFirestore: (snapshot, _) =>
+                              FoodInfo.fromMap(snapshot.data()!),
+                          toFirestore: (foodInfo, _) => foodInfo.toMap(),
+                        );
+                  },
+                ),
+                itemBuilder: (context) => [
+                  for (final shop in snapshot.data!.docs.asMap().entries)
+                    PopupMenuItem(
+                      value: shop.key,
+                      child: Text(shop.value.data().name),
+                    )
+                ],
+              )
+            ],
+          ),
+          body: <Widget>[
+            CreatePayment(
+              foodInfoCollectionReference: _foodInfoCollectionReference,
+            ),
+            setting_screen.Settings(
+              foodInfoCollectionReference: _foodInfoCollectionReference,
+            ),
+            const ShopSettings()
+          ][_selectedIndex],
+        );
+      },
     );
   }
 }
