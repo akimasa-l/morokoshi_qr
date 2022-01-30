@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import "package:cloud_firestore/cloud_firestore.dart";
 import 'package:adaptive_navigation/adaptive_navigation.dart';
 import "shopsettingscreen.dart";
+import 'package:shared_preferences/shared_preferences.dart';
 import "morokoshi_stream_builder.dart";
 
 void main() async {
@@ -67,20 +68,6 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class UnloadedWidget extends StatelessWidget {
-  const UnloadedWidget(this.title, {Key? key}) : super(key: key);
-  final String title;
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(title),
-      ),
-    );
-  }
-}
-
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
   static const _destination = <AdaptiveScaffoldDestination>[
@@ -88,6 +75,10 @@ class _MyHomePageState extends State<MyHomePage> {
     AdaptiveScaffoldDestination(title: "Settings", icon: Icons.settings),
     AdaptiveScaffoldDestination(title: "Shops", icon: Icons.business),
   ];
+  @override
+  void initState() {
+    super.initState();
+  }
   // int _counter = 0;
 
   /* void _incrementCounter() {
@@ -108,7 +99,8 @@ class _MyHomePageState extends State<MyHomePage> {
       )
       .snapshots();
   late CollectionReference<FoodInfo> _foodInfoCollectionReference;
-  int _selectedShopIndex = 0;
+  late int _selectedShopIndex;
+  late final SharedPreferences prefs;
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -117,76 +109,85 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return MorokoshiStreamBuilder<Shop>(
-      stream: _shopsStream,
-      builder: (context, snapshot) {
-        final _selectedShop = snapshot.data!.docs[_selectedShopIndex];
-        _foodInfoCollectionReference = _selectedShop.reference
-            .collection("foodInfo")
-            .withConverter<FoodInfo>(
-              fromFirestore: (snapshot, _) =>
-                  FoodInfo.fromMap(snapshot.data()!),
-              toFirestore: (foodInfo, _) => foodInfo.toMap(),
-            );
-        return AdaptiveNavigationScaffold(
-          destinations: _destination,
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: (selectedIndex) =>
-              setState(() => _selectedIndex = selectedIndex),
-          appBar: AdaptiveAppBar(
-            // Here we take the value from the MyHomePage object that was created by
-            // the App.build method, and use it to set our appbar title.
-            title: Text(
-              widget.title, /* style: const TextStyle(color: Colors.black) */
-            ),
-            // backgroundColor: Colors.white,
-            actions: <Widget>[
-              Center(
-                child: Text(
-                  _selectedShop.data().name,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: Theme.of(context).textTheme.subtitle2?.fontSize,
+    return FutureBuilder(future: () async {
+      prefs = await SharedPreferences.getInstance();
+      _selectedShopIndex = prefs.getInt("selectedShopIndex") ?? 0;
+    }(), builder: (context, snapshot) {
+      return MorokoshiStreamBuilder<Shop>(
+        stream: _shopsStream,
+        builder: (context, snapshot) {
+          final _selectedShop = snapshot.data!.docs[_selectedShopIndex];
+          _foodInfoCollectionReference = _selectedShop.reference
+              .collection("foodInfo")
+              .withConverter<FoodInfo>(
+                fromFirestore: (snapshot, _) =>
+                    FoodInfo.fromMap(snapshot.data()!),
+                toFirestore: (foodInfo, _) => foodInfo.toMap(),
+              );
+          return AdaptiveNavigationScaffold(
+            destinations: _destination,
+            selectedIndex: _selectedIndex,
+            onDestinationSelected: (selectedIndex) =>
+                setState(() => _selectedIndex = selectedIndex),
+            appBar: AdaptiveAppBar(
+              // Here we take the value from the MyHomePage object that was created by
+              // the App.build method, and use it to set our appbar title.
+              title: Text(
+                widget.title, /* style: const TextStyle(color: Colors.black) */
+              ),
+              // backgroundColor: Colors.white,
+              actions: <Widget>[
+                Center(
+                  child: Text(
+                    _selectedShop.data().name,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: Theme.of(context).textTheme.subtitle2?.fontSize,
+                    ),
                   ),
                 ),
-              ),
-              PopupMenuButton<int>(
-                initialValue: 0,
-                onSelected: (shopIndex) => setState(
-                  () {
-                    _selectedShopIndex = shopIndex;
-                    final _selectedShop =
-                        snapshot.data!.docs[_selectedShopIndex];
-                    _foodInfoCollectionReference = _selectedShop.reference
-                        .collection("foodInfo")
-                        .withConverter<FoodInfo>(
-                          fromFirestore: (snapshot, _) =>
-                              FoodInfo.fromMap(snapshot.data()!),
-                          toFirestore: (foodInfo, _) => foodInfo.toMap(),
-                        );
+                PopupMenuButton<int>(
+                  initialValue: 0,
+                  onSelected: (shopIndex) async {
+                    setState(
+                      () {
+                        // ここいらない気がする？　しないか
+                        _selectedShopIndex = shopIndex;
+                        final _selectedShop =
+                            snapshot.data!.docs[_selectedShopIndex];
+                        _foodInfoCollectionReference = _selectedShop.reference
+                            .collection("foodInfo")
+                            .withConverter<FoodInfo>(
+                              fromFirestore: (snapshot, _) =>
+                                  FoodInfo.fromMap(snapshot.data()!),
+                              toFirestore: (foodInfo, _) => foodInfo.toMap(),
+                            );
+                      },
+                    );
+                    await prefs.setInt("selectedShopIndex", _selectedShopIndex);
                   },
-                ),
-                itemBuilder: (context) => [
-                  for (final shop in snapshot.data!.docs.asMap().entries)
-                    PopupMenuItem(
-                      value: shop.key,
-                      child: Text(shop.value.data().name),
-                    )
-                ],
-              )
-            ],
-          ),
-          body: <Widget>[
-            CreatePayment(
-              foodInfoCollectionReference: _foodInfoCollectionReference,
+                  itemBuilder: (context) => [
+                    for (final shop in snapshot.data!.docs.asMap().entries)
+                      PopupMenuItem(
+                        value: shop.key,
+                        child: Text(shop.value.data().name),
+                      )
+                  ],
+                )
+              ],
             ),
-            setting_screen.Settings(
-              foodInfoCollectionReference: _foodInfoCollectionReference,
-            ),
-            const ShopSettings()
-          ][_selectedIndex],
-        );
-      },
-    );
+            body: <Widget>[
+              CreatePayment(
+                foodInfoCollectionReference: _foodInfoCollectionReference,
+              ),
+              setting_screen.Settings(
+                foodInfoCollectionReference: _foodInfoCollectionReference,
+              ),
+              const ShopSettings()
+            ][_selectedIndex],
+          );
+        },
+      );
+    });
   }
 }
