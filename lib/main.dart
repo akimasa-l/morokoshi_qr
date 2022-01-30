@@ -116,6 +116,10 @@ class _MyHomePageState extends State<MyHomePage> {
       return MorokoshiStreamBuilder<Shop>(
         stream: _shopsStream,
         builder: (context, snapshot) {
+          if (_selectedShopIndex < 0 ||
+              _selectedShopIndex >= snapshot.data!.docs.length) {
+            _selectedShopIndex = 0;
+          }
           final _selectedShop = snapshot.data!.docs[_selectedShopIndex];
           _foodInfoCollectionReference = _selectedShop.reference
               .collection("foodInfo")
