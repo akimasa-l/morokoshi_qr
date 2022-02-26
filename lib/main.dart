@@ -109,89 +109,95 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return FutureBuilder(future: () async {
-      prefs = await SharedPreferences.getInstance();
-      _selectedShopIndex = prefs.getInt("selectedShopIndex") ?? 0;
-    }(), builder: (context, snapshot) {
-      return MorokoshiStreamBuilder<Shop>(
-        stream: _shopsStream,
-        builder: (context, snapshot) {
-          if (_selectedShopIndex < 0 ||
-              _selectedShopIndex >= snapshot.data!.docs.length) {
-            _selectedShopIndex = 0;
-          }
-          final _selectedShop = snapshot.data!.docs[_selectedShopIndex];
-          _foodInfoCollectionReference = _selectedShop.reference
-              .collection("foodInfo")
-              .withConverter<FoodInfo>(
-                fromFirestore: (snapshot, _) =>
-                    FoodInfo.fromMap(snapshot.data()!),
-                toFirestore: (foodInfo, _) => foodInfo.toMap(),
-              );
-          return AdaptiveNavigationScaffold(
-            destinations: _destination,
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (selectedIndex) =>
-                setState(() => _selectedIndex = selectedIndex),
-            appBar: AdaptiveAppBar(
-              // Here we take the value from the MyHomePage object that was created by
-              // the App.build method, and use it to set our appbar title.
-              title: Text(
-                widget.title, /* style: const TextStyle(color: Colors.black) */
-              ),
-              // backgroundColor: Colors.white,
-              actions: <Widget>[
-                Center(
-                  child: Text(
-                    _selectedShop.data().name,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: Theme.of(context).textTheme.subtitle2?.fontSize,
+    return FutureBuilder(
+      future: () async {
+        prefs = await SharedPreferences.getInstance();
+        _selectedShopIndex = prefs.getInt("selectedShopIndex") ?? 0;
+      }(),
+      builder: (context, snapshot) {
+        return MorokoshiStreamBuilder<Shop>(
+          stream: _shopsStream,
+          builder: (context, snapshot) {
+            if (_selectedShopIndex < 0 ||
+                _selectedShopIndex >= snapshot.data!.docs.length) {
+              _selectedShopIndex = 0;
+            }
+            final _selectedShop = snapshot.data!.docs[_selectedShopIndex];
+            _foodInfoCollectionReference = _selectedShop.reference
+                .collection("foodInfo")
+                .withConverter<FoodInfo>(
+                  fromFirestore: (snapshot, _) =>
+                      FoodInfo.fromMap(snapshot.data()!),
+                  toFirestore: (foodInfo, _) => foodInfo.toMap(),
+                );
+            return AdaptiveNavigationScaffold(
+              destinations: _destination,
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (selectedIndex) =>
+                  setState(() => _selectedIndex = selectedIndex),
+              appBar: AdaptiveAppBar(
+                // Here we take the value from the MyHomePage object that was created by
+                // the App.build method, and use it to set our appbar title.
+                title: Text(
+                  widget
+                      .title, /* style: const TextStyle(color: Colors.black) */
+                ),
+                // backgroundColor: Colors.white,
+                actions: <Widget>[
+                  Center(
+                    child: Text(
+                      _selectedShop.data().name,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize:
+                            Theme.of(context).textTheme.subtitle2?.fontSize,
+                      ),
                     ),
                   ),
+                  PopupMenuButton<int>(
+                    initialValue: 0,
+                    onSelected: (shopIndex) async {
+                      setState(
+                        () {
+                          // ここいらない気がする？　しないか
+                          _selectedShopIndex = shopIndex;
+                          final _selectedShop =
+                              snapshot.data!.docs[_selectedShopIndex];
+                          _foodInfoCollectionReference = _selectedShop.reference
+                              .collection("foodInfo")
+                              .withConverter<FoodInfo>(
+                                fromFirestore: (snapshot, _) =>
+                                    FoodInfo.fromMap(snapshot.data()!),
+                                toFirestore: (foodInfo, _) => foodInfo.toMap(),
+                              );
+                        },
+                      );
+                      await prefs.setInt(
+                          "selectedShopIndex", _selectedShopIndex);
+                    },
+                    itemBuilder: (context) => [
+                      for (final shop in snapshot.data!.docs.asMap().entries)
+                        PopupMenuItem(
+                          value: shop.key,
+                          child: Text(shop.value.data().name),
+                        )
+                    ],
+                  )
+                ],
+              ),
+              body: <Widget>[
+                CreatePayment(
+                  foodInfoCollectionReference: _foodInfoCollectionReference,
                 ),
-                PopupMenuButton<int>(
-                  initialValue: 0,
-                  onSelected: (shopIndex) async {
-                    setState(
-                      () {
-                        // ここいらない気がする？　しないか
-                        _selectedShopIndex = shopIndex;
-                        final _selectedShop =
-                            snapshot.data!.docs[_selectedShopIndex];
-                        _foodInfoCollectionReference = _selectedShop.reference
-                            .collection("foodInfo")
-                            .withConverter<FoodInfo>(
-                              fromFirestore: (snapshot, _) =>
-                                  FoodInfo.fromMap(snapshot.data()!),
-                              toFirestore: (foodInfo, _) => foodInfo.toMap(),
-                            );
-                      },
-                    );
-                    await prefs.setInt("selectedShopIndex", _selectedShopIndex);
-                  },
-                  itemBuilder: (context) => [
-                    for (final shop in snapshot.data!.docs.asMap().entries)
-                      PopupMenuItem(
-                        value: shop.key,
-                        child: Text(shop.value.data().name),
-                      )
-                  ],
-                )
-              ],
-            ),
-            body: <Widget>[
-              CreatePayment(
-                foodInfoCollectionReference: _foodInfoCollectionReference,
-              ),
-              setting_screen.Settings(
-                foodInfoCollectionReference: _foodInfoCollectionReference,
-              ),
-              const ShopSettings()
-            ][_selectedIndex],
-          );
-        },
-      );
-    });
+                setting_screen.Settings(
+                  foodInfoCollectionReference: _foodInfoCollectionReference,
+                ),
+                const ShopSettings()
+              ][_selectedIndex],
+            );
+          },
+        );
+      },
+    );
   }
 }

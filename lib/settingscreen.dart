@@ -202,30 +202,31 @@ class _FoodSettingFormState extends State<FoodSettingForm> {
         title: const Text("Settings"),
         actions: <Widget>[
           IconButton(
-              onPressed: () {
-                showPlatformDialog(
-                  context: context,
-                  builder: (context) => PlatformAlertDialog(
-                    title: const Text("びっくり!"),
-                    content: const Text("本当に削除しますか？"),
-                    actions: <Widget>[
-                      PlatformDialogAction(
-                        child: const Text("やっぱやめとく..."),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      PlatformDialogAction(
-                        child: const Text("削除しちゃう!!"),
-                        onPressed: () async {
-                          await reference.delete();
-                          Navigator.of(context)
-                              .popUntil((route) => route.isFirst);
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-              icon: const Icon(Icons.delete)),
+            onPressed: () {
+              showPlatformDialog(
+                context: context,
+                builder: (context) => PlatformAlertDialog(
+                  title: const Text("びっくり!"),
+                  content: const Text("本当に削除しますか？"),
+                  actions: <Widget>[
+                    PlatformDialogAction(
+                      child: const Text("やっぱやめとく..."),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    PlatformDialogAction(
+                      child: const Text("削除しちゃう!!"),
+                      onPressed: () async {
+                        await reference.delete();
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst);
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+            icon: const Icon(Icons.delete),
+          ),
         ],
       ),
       body: Center(

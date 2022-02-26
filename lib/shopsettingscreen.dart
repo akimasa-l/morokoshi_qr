@@ -216,40 +216,41 @@ class _ShopSettingFormState extends State<ShopSettingForm> {
         title: const Text("Settings"),
         actions: <Widget>[
           IconButton(
-              onPressed: () {
-                showPlatformDialog(
-                  context: context,
-                  builder: (context) => PlatformAlertDialog(
-                    title: const Text("びっくり!"),
-                    content: const Text("本当にこの店を削除しますか？"),
-                    actions: <Widget>[
-                      PlatformDialogAction(
-                        child: const Text("やっぱやめとく..."),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      PlatformDialogAction(
-                        child: const Text("削除しちゃう!!"),
-                        onPressed: () async {
-                          final snapshots =
-                              await reference.collection("foodInfo").get();
-                          for (final snapshot in snapshots.docs) {
-                            await snapshot.reference.delete();
-                          }
-                          await reference.delete();
-                          Navigator.of(context)
-                              .popUntil((route) => route.isFirst);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("削除したよ～～～!!!!"),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-              icon: const Icon(Icons.delete)),
+            onPressed: () {
+              showPlatformDialog(
+                context: context,
+                builder: (context) => PlatformAlertDialog(
+                  title: const Text("びっくり!"),
+                  content: const Text("本当にこの店を削除しますか？"),
+                  actions: <Widget>[
+                    PlatformDialogAction(
+                      child: const Text("やっぱやめとく..."),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    PlatformDialogAction(
+                      child: const Text("削除しちゃう!!"),
+                      onPressed: () async {
+                        final snapshots =
+                            await reference.collection("foodInfo").get();
+                        for (final snapshot in snapshots.docs) {
+                          await snapshot.reference.delete();
+                        }
+                        await reference.delete();
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("削除したよ～～～!!!!"),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+            icon: const Icon(Icons.delete),
+          ),
         ],
       ),
       body: Center(
