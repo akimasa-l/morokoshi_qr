@@ -1,9 +1,10 @@
 import "package:flutter/material.dart";
 import "dart:async";
 import "package:cloud_firestore/cloud_firestore.dart";
-import "orderscreen.dart";
+import 'order_screen.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-import "settingscreen.dart";
+import 'setting_screen.dart';
+import 'payment_details.dart';
 
 class Shop {
   const Shop({required this.name});
@@ -110,6 +111,29 @@ class ShopSettings extends StatelessWidget {
                           toFirestore: (foodInfo, _) => foodInfo.toMap(),
                         )
                         .add(AddNewFood.foodInfo);
+                    await newDoc
+                        .collection("paymentDetails")
+                        .withConverter<PaymentDetails>(
+                          fromFirestore: (snapshot, _) =>
+                              PaymentDetails.fromMap(snapshot.data()!),
+                          toFirestore: (paymentDetails, _) =>
+                              paymentDetails.toMap(),
+                        )
+                        .add(
+                          PaymentDetails(
+                            foodCount: [
+                              FoodCount(
+                                foodInfo: const FoodInfo(
+                                  imageUrl:
+                                      "https://drive.google.com/uc?id=1m8E3fZPj4k35zfCLhAHaV-Nsm8diFJNy",
+                                  name: "最初に来るお通しみたいなもんよ",
+                                  unitPrice: 0,
+                                ),
+                                count: 0,
+                              ),
+                            ],
+                          ),
+                        );
                   },
                   index: docs.length,
                 ),
@@ -230,10 +254,15 @@ class _ShopSettingFormState extends State<ShopSettingForm> {
                     PlatformDialogAction(
                       child: const Text("削除しちゃう!!"),
                       onPressed: () async {
-                        final snapshots =
-                            await reference.collection("foodInfo").get();
-                        for (final snapshot in snapshots.docs) {
-                          await snapshot.reference.delete();
+                        for (final collectionName in [
+                          "foodInfo",
+                          "paymentDetails",
+                        ]) {
+                          final snapshots =
+                              await reference.collection(collectionName).get();
+                          for (final snapshot in snapshots.docs) {
+                            await snapshot.reference.delete();
+                          }
                         }
                         await reference.delete();
                         Navigator.of(context)

@@ -77,6 +77,7 @@ class FoodCount {
         'unitPrice': foodInfo.unitPrice,
         'name': foodInfo.name,
         'count': count,
+        'imageUrl': foodInfo.imageUrl,
       };
 }
 
