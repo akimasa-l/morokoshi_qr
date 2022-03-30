@@ -1,8 +1,10 @@
 import "package:flutter/material.dart";
 import "dart:async";
 import "package:cloud_firestore/cloud_firestore.dart";
+import "order_screen.dart";
 import 'shop_setting_screen.dart';
 import 'payment_details.dart';
+import 'morokoshi_stream_builder.dart';
 
 class Summary extends StatelessWidget {
   const Summary({Key? key}) : super(key: key);
@@ -17,18 +19,9 @@ class Summary extends StatelessWidget {
           toFirestore: (shop, _) => shop.toMap(),
         )
         .snapshots();
-    return StreamBuilder<QuerySnapshot<Shop>>(
+    return MorokoshiStreamBuilder<Shop>(
       stream: _shopsStream,
       builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text("Loading");
-        }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Text("データ消えてるっぽいです。ごめんなさい。");
-        }
         final docs = snapshot.data!.docs;
         return Wrap(
           alignment: WrapAlignment.spaceEvenly,
@@ -36,9 +29,7 @@ class Summary extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
-          children: <Widget>[
-            for (final document in docs) Text("data", document.reference)
-          ],
+          children: <Widget>[for (final document in docs) Text("data")],
         );
       },
     );
@@ -46,16 +37,29 @@ class Summary extends StatelessWidget {
 }
 
 class ShopSummary extends StatelessWidget {
+  static int paymentSum(List<QueryDocumentSnapshot<PaymentDetails>> docs) {
+    return docs.fold(0, (sum, doc) => sum + doc.data().foodCount.amount);
+  }
+
   const ShopSummary({Key? key, required this.shopReference}) : super(key: key);
   final DocumentReference<Shop> shopReference;
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    shopReference.collection("paymentDetails").withConverter<PaymentDetails>(
+    final paymentDetailsSnapshot = shopReference
+        .collection("paymentDetails")
+        .withConverter<PaymentDetails>(
           fromFirestore: (snapshot, _) =>
               PaymentDetails.fromMap(snapshot.data()!),
           toFirestore: (paymentDetails, _) => paymentDetails.toMap(),
-        );
-    return const Text("aa");
+        )
+        .snapshots();
+    return MorokoshiStreamBuilder<PaymentDetails>(
+      stream: paymentDetailsSnapshot,
+      builder: (context, snapshot) {
+        final docs = snapshot.data!.docs;
+        return Text("今の所合計：${paymentSum(docs)}");
+      },
+    );
   }
 }

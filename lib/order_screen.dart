@@ -168,6 +168,11 @@ class FoodWidget extends StatelessWidget {
   }
 }
 
+extension GetFoodAmount on List<FoodCount> {
+  int get amount =>
+      fold(0, (int acc, FoodCount foodCount) => acc + foodCount.count);
+}
+
 class FoodWidgets extends StatefulWidget {
   const FoodWidgets({
     Key? key,
@@ -185,8 +190,6 @@ class _FoodWidgetsState extends State<FoodWidgets> {
     super.initState();
     _foods = widget.foods;
   }
-
-  int amount = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -299,7 +302,7 @@ class _FoodWidgetsState extends State<FoodWidgets> {
                           ),
                           DataCell(
                             Text(
-                              '${amount = _foods.fold(0, (int a, FoodCount b) => a + b.foodInfo.unitPrice * b.count)}円',
+                              '${_foods.amount}円',
                             ), //これも　プログラマーはもういらないわ
                           ),
                         ],
@@ -324,7 +327,7 @@ class _FoodWidgetsState extends State<FoodWidgets> {
                                 .where((FoodCount f) => f.count > 0)
                                 .map((FoodCount f) => f.toPayPayOrderItem())
                                 .toList(),
-                            amount: MoneyAmount(amount: amount),
+                            amount: MoneyAmount(amount: _foods.amount),
                             requestedAt:
                                 (DateTime.now().millisecondsSinceEpoch ~/ 1000),
                           ),
