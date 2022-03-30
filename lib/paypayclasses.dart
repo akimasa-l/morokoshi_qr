@@ -13,11 +13,11 @@ class MoneyAmount {
       };
 }
 
-class OrderItem {
+class PayPayOrderItem {
   final String name, productId, category;
   final int quantity;
   final MoneyAmount unitPrice;
-  const OrderItem({
+  const PayPayOrderItem({
     required this.name,
     this.productId = "defaultProductId",
     this.category = "ここにcategoryが入るかも",
@@ -41,7 +41,7 @@ class CreateQRCodeBody {
       storeId,
       terminalId;
   final MoneyAmount amount;
-  final List<OrderItem> orderItems;
+  final List<PayPayOrderItem> orderItems;
   final dynamic metadata;
   final int requestedAt, authorizationExpiry;
   final bool isAuthorization;

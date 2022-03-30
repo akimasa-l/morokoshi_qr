@@ -65,13 +65,19 @@ class FoodCount {
     return count.toString();
   }
 
-  OrderItem toOrderItem() {
-    return OrderItem(
+  PayPayOrderItem toPayPayOrderItem() {
+    return PayPayOrderItem(
       name: foodInfo.name,
       unitPrice: MoneyAmount(amount: foodInfo.unitPrice),
       quantity: count,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'unitPrice': foodInfo.unitPrice,
+        'name': foodInfo.name,
+        'count': count,
+      };
 }
 
 class FoodWidget extends StatelessWidget {
@@ -315,7 +321,7 @@ class _FoodWidgetsState extends State<FoodWidgets> {
                                 .toString(),
                             orderItems: _foods
                                 .where((FoodCount f) => f.count > 0)
-                                .map((FoodCount f) => f.toOrderItem())
+                                .map((FoodCount f) => f.toPayPayOrderItem())
                                 .toList(),
                             amount: MoneyAmount(amount: amount),
                             requestedAt:

@@ -64,6 +64,8 @@ class DisplayQR extends StatelessWidget {
       future: payPayClient.createQRCode(
         createQRCodeBody,
       ), // a previously-obtained Future<String> or null
+      // ↑これなんだよ　おれはこんな英語かけねえからたぶんGitHub Copilotだな
+      // ↑てかnull入ってるわけねえだろボケナス
       builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
         if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
