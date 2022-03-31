@@ -29,7 +29,10 @@ class Summary extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           crossAxisAlignment: WrapCrossAlignment.center,
-          children: <Widget>[for (final document in docs) Text("data")],
+          children: <Widget>[
+            for (final document in docs)
+              ShopSummary(shopReference: document.reference),
+          ],
         );
       },
     );
@@ -37,8 +40,16 @@ class Summary extends StatelessWidget {
 }
 
 class ShopSummary extends StatelessWidget {
-  static int paymentSum(List<QueryDocumentSnapshot<PaymentDetails>> docs) {
-    return docs.fold(0, (sum, doc) => sum + doc.data().foodCount.amount);
+  static Map<PayType, int> paymentSum(
+      List<QueryDocumentSnapshot<PaymentDetails>> docs) {
+    final a = {for (final payType in PayType.values) payType: 0};
+    for (final doc in docs) {
+      final paymentDetails = doc.data();
+      a[paymentDetails.payType] =
+          paymentDetails.foodCount.amount + a[paymentDetails.payType]!;
+          // +=は何故か使えないんですね～
+    }
+    return a;
   }
 
   const ShopSummary({Key? key, required this.shopReference}) : super(key: key);

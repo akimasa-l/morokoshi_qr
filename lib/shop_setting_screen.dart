@@ -132,6 +132,7 @@ class ShopSettings extends StatelessWidget {
                                 count: 0,
                               ),
                             ],
+                            payType: PayType.cash,
                           ),
                         );
                   },
