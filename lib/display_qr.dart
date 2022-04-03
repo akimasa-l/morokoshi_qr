@@ -3,6 +3,7 @@ import "paypayclasses.dart";
 import 'package:qr_flutter/qr_flutter.dart';
 import "dart:async";
 import "dart:convert";
+import "pay_finish_button.dart";
 import "paypaysecret.dart";
 
 class DisplayQRContainer extends StatelessWidget {
@@ -36,12 +37,7 @@ class DisplayQRContainer extends StatelessWidget {
                 style: Theme.of(context).textTheme.headline4,
               ),
               // 戻るボタン
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamedAndRemoveUntil(context, "/", (_) => false);
-                },
-                child: const Text("次のお支払いに進む"),
-              )
+              const PayFinishButton(),
             ],
           ),
         ),

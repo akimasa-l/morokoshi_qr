@@ -47,7 +47,7 @@ class ShopSummary extends StatelessWidget {
       final paymentDetails = doc.data();
       a[paymentDetails.payType] =
           paymentDetails.foodCount.amount + a[paymentDetails.payType]!;
-          // +=は何故か使えないんですね～
+      // +=は何故か使えないんですね～
     }
     return a;
   }

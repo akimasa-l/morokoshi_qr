@@ -16,11 +16,13 @@ class UnloadedWidget extends StatelessWidget {
 }
 
 class MorokoshiStreamBuilder<T> extends StatelessWidget {
-  const MorokoshiStreamBuilder(
-      {Key? key, required this.stream, required this.builder})
-      : super(key: key);
+  const MorokoshiStreamBuilder({
+    Key? key,
+    required this.stream,
+    required this.builder,
+  }) : super(key: key);
   final Stream<QuerySnapshot<T>> stream;
-  final Widget Function(BuildContext, AsyncSnapshot<QuerySnapshot<T>>) builder;
+  final AsyncWidgetBuilder<QuerySnapshot<T>> builder;
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {

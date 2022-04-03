@@ -1,5 +1,10 @@
+import "package:flutter/material.dart";
+import 'package:morokoshi_qr/pay_finish_button.dart';
 import 'package:url_launcher/url_launcher.dart';
+import "dart:async";
 import "dart:convert";
+import "morokoshi_future_builder.dart";
+import "package:http/http.dart" as http;
 
 enum TenderTypes {
   creditCard,
@@ -96,6 +101,7 @@ class SquarePay {
         "sdk_version": sdk_version,
         "version": version,
       };
+
   /// わんちゃんObjective-Cがカスなせいで[callback_url]のところを
   /// ふつうは
   ///  ```dart
@@ -104,17 +110,49 @@ class SquarePay {
   ///  にしたいところを
   /// ```dart
   /// "food-register-app:\\/\\/square_request"
-  /// ``` 
+  /// ```
   /// みたいな感じに
-  /// しなければならないかもです 
+  /// しなければならないかもです
   /// てかこの後ろの
   /// ```dart
   /// "square_request"
-  /// ``` 
+  /// ```
   /// はいったいなんなんだろうな
   Future<void> pay() async {
     await launch(
         "square-commerce-v1://payment/create?data=${Uri.encodeComponent(jsonEncode(toJson()))}");
     '{"notes":"聖光祭食品店舗 フランクフルト","callback_url":"food-register-app:\\/\\/square_request","location_id":"LJRBXB2HKP93T","version":"1.3","amount_money":{"amount":350,"currency_code":"JPY"},"options":{"auto_return":true,"skip_receipt":true,"clear_default_fees":false,"disable_cnp":true,"supported_tender_types":["CREDIT_CARD","CASH","OTHER","SQUARE_GIFT_CARD","CARD_ON_FILE"]},"client_id":"sq0idp-qiwKd4g26Tpdlw5eY1QFdQ","sdk_version":"3.5.0"}';
+  }
+}
+
+class SquareFinish extends StatelessWidget {
+  const SquareFinish({Key? key}) : super(key: key);
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Squareの決済完了！")),
+      body: SingleChildScrollView(
+        child: MorokoshiFutureBuilder<String>(
+          future: () async {
+            // ここを決済が完了したことをデータベースに残しておく
+            await http.get(Uri.https("google.com", "/"));
+            return "google.com";
+          }(),
+          builder: (context, snapshot) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "${snapshot.data}",
+                ),
+                const PayFinishButton(),
+              ],
+            );
+          },
+        ),
+      ),
+    );
   }
 }

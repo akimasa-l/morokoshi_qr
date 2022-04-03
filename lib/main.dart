@@ -8,6 +8,7 @@ import 'package:adaptive_navigation/adaptive_navigation.dart';
 import 'shop_setting_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import "morokoshi_stream_builder.dart";
+import "morokoshi_future_builder.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +47,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      routes: {
+        "/square-finished": (context) => const Text(""),
+      },
     );
   }
 }
@@ -100,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
       .snapshots();
   late CollectionReference<FoodInfo> _foodInfoCollectionReference;
   late int _selectedShopIndex;
-  late final SharedPreferences prefs;
+  late SharedPreferences prefs;
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -109,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return FutureBuilder(
+    return MorokoshiFutureBuilder<void>(
       future: () async {
         prefs = await SharedPreferences.getInstance();
         _selectedShopIndex = prefs.getInt("selectedShopIndex") ?? 0;

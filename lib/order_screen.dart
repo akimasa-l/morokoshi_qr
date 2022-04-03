@@ -3,6 +3,7 @@ import 'paypayclasses.dart';
 import "display_qr.dart";
 import 'dart:math';
 import "morokoshi_cached_network_image.dart";
+import "morokoshi_stream_builder.dart";
 import "package:cloud_firestore/cloud_firestore.dart";
 
 class FoodInfo {
@@ -231,121 +232,124 @@ class _FoodWidgetsState extends State<FoodWidgets> {
             },
           ),
         ),
-        Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: DataTable(
-                    columns: const <DataColumn>[
-                      DataColumn(
-                        label: Text("商品名"),
-                      ),
-                      DataColumn(
-                        label: Text("単価"),
-                        numeric: true,
-                      ),
-                      DataColumn(
-                        label: Text("個数"),
-                        numeric: true,
-                      ),
-                      DataColumn(
-                        label: Text("合計"),
-                        numeric: true,
-                      ),
-                    ],
-                    rows: <DataRow>[
-                      for (final foodCount in _foods)
-                        if (foodCount.count > 0)
-                          //　ここあるとボタンの位置が変わっちゃうんだよな
-                          DataRow(
-                            cells: <DataCell>[
-                              DataCell(
-                                Text(foodCount.foodInfo.name),
-                              ),
-                              DataCell(
-                                Text('${foodCount.foodInfo.unitPrice}円'),
-                              ),
-                              DataCell(
-                                Text('${foodCount.count}'),
-                                // showEditIcon: true,
-                                onTap: () {
-                                  setState(() {
-                                    foodCount.count = 0;
-                                  });
-                                },
-                              ),
-                              DataCell(
-                                Text(
-                                    '${foodCount.foodInfo.unitPrice * foodCount.count}円'),
-                              ),
-                            ],
-                          ),
-                      DataRow(
-                        cells: <DataCell>[
-                          const DataCell(
-                            Text('合計'),
-                          ),
-                          const DataCell(
-                            Text('-'),
-                          ),
-                          DataCell(
-                            Text(
-                              '${_foods.fold(0, (int a, FoodCount b) => a + b.count)}個',
-                            ), //これGitHub Copilotが書いてくれたんだけど　すげえ
-                          ),
-                          DataCell(
-                            Text(
-                              '${_foods.amount}円',
-                            ), //これも　プログラマーはもういらないわ
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DisplayQRContainer(
-                          createQRCodeBody: CreateQRCodeBody(
-                            merchantPaymentId: DateTime.now()
-                                .millisecondsSinceEpoch
-                                .toString(),
-                            orderItems: _foods
-                                .where((FoodCount f) => f.count > 0)
-                                .map((FoodCount f) => f.toPayPayOrderItem())
-                                .toList(),
-                            amount: MoneyAmount(amount: _foods.amount),
-                            requestedAt:
-                                (DateTime.now().millisecondsSinceEpoch ~/ 1000),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                  icon: Padding(
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Hero(
-                      tag: "PayPay",
-                      child: Image.asset("images/paypay.png", width: 32),
+                    child: DataTable(
+                      columns: const <DataColumn>[
+                        DataColumn(
+                          label: Text("商品名"),
+                        ),
+                        DataColumn(
+                          label: Text("単価"),
+                          numeric: true,
+                        ),
+                        DataColumn(
+                          label: Text("個数"),
+                          numeric: true,
+                        ),
+                        DataColumn(
+                          label: Text("合計"),
+                          numeric: true,
+                        ),
+                      ],
+                      rows: <DataRow>[
+                        for (final foodCount in _foods)
+                          if (foodCount.count > 0)
+                            //　ここあるとボタンの位置が変わっちゃうんだよな
+                            DataRow(
+                              cells: <DataCell>[
+                                DataCell(
+                                  Text(foodCount.foodInfo.name),
+                                ),
+                                DataCell(
+                                  Text('${foodCount.foodInfo.unitPrice}円'),
+                                ),
+                                DataCell(
+                                  Text('${foodCount.count}'),
+                                  // showEditIcon: true,
+                                  onTap: () {
+                                    setState(() {
+                                      foodCount.count = 0;
+                                    });
+                                  },
+                                ),
+                                DataCell(
+                                  Text(
+                                      '${foodCount.foodInfo.unitPrice * foodCount.count}円'),
+                                ),
+                              ],
+                            ),
+                        DataRow(
+                          cells: <DataCell>[
+                            const DataCell(
+                              Text('合計'),
+                            ),
+                            const DataCell(
+                              Text('-'),
+                            ),
+                            DataCell(
+                              Text(
+                                '${_foods.fold(0, (int a, FoodCount b) => a + b.count)}個',
+                              ), //これGitHub Copilotが書いてくれたんだけど　すげえ
+                            ),
+                            DataCell(
+                              Text(
+                                '${_foods.amount}円',
+                              ), //これも　プログラマーはもういらないわ
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  label: const Text("PayPayで支払う"),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DisplayQRContainer(
+                            createQRCodeBody: CreateQRCodeBody(
+                              merchantPaymentId: DateTime.now()
+                                  .millisecondsSinceEpoch
+                                  .toString(),
+                              orderItems: _foods
+                                  .where((FoodCount f) => f.count > 0)
+                                  .map((FoodCount f) => f.toPayPayOrderItem())
+                                  .toList(),
+                              amount: MoneyAmount(amount: _foods.amount),
+                              requestedAt:
+                                  (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    icon: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Hero(
+                        tag: "PayPay",
+                        child: Image.asset("images/paypay.png", width: 32),
+                      ),
+                    ),
+                    label: const Text("PayPayで支払う"),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -360,18 +364,9 @@ class CreatePayment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot<FoodInfo>>(
+    return MorokoshiStreamBuilder<FoodInfo>(
       stream: foodInfoCollectionReference.snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text("Loading");
-        }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Text("データ消えてるっぽいです。ごめんなさい。");
-        }
         return FoodWidgets(
           foods: <FoodCount>[
             for (final document in snapshot.data!.docs)

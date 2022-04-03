@@ -6,9 +6,9 @@ enum PayType {
   square,
 }
 
-extension PayTypeName on PayType{
-  String get name{
-    switch(this){
+extension PayTypeName on PayType {
+  String get name {
+    switch (this) {
       case PayType.cash:
         return "cash";
       case PayType.paypay:
@@ -19,9 +19,9 @@ extension PayTypeName on PayType{
   }
 }
 
-extension on String{
-  PayType get payType{
-    switch(this){
+extension on String {
+  PayType get payType {
+    switch (this) {
       case "PayPay":
         return PayType.paypay;
       case "Square":
@@ -48,7 +48,7 @@ class PaymentDetails {
         assert(map['paymentDetails'] is List),
         assert(map['payType'] != null),
         assert(map['payType'] is String),
-        payType=(map['payType'] as String).payType,
+        payType = (map['payType'] as String).payType,
         foodCount =
             map['paymentDetails'].map((e) => FoodCount.fromMap(e)).toList();
 }

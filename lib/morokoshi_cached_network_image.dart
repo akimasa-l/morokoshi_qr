@@ -3,8 +3,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 class MorokoshiCachedNetworkImage extends StatelessWidget {
   final String imageUrl;
-  const MorokoshiCachedNetworkImage({Key? key, required this.imageUrl,})
-      : super(key: key);
+  const MorokoshiCachedNetworkImage({
+    Key? key,
+    required this.imageUrl,
+  }) : super(key: key);
 
   // This widget is the root of your application.
   @override
