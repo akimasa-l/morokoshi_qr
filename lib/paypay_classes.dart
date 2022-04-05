@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class PayPayMoneyAmount {
@@ -81,7 +82,7 @@ class PayPayOPA {
     required this.apiSecret,
     required this.merchantId,
   });
-  static const String urlHost = "stg-api.sandbox.paypay.ne.jp";
+  static const String urlHost = "stg-api.paypay.ne.jp";
   Future<String> createQRCode(PayPayCreateQRCodeBody body) async {
     const String urlPath = "/v2/codes";
     const String contentType = "application/json;charset=UTF-8";
@@ -251,6 +252,7 @@ class PayPayOPA {
       requestBody: requestBody,
       contentType: contentType,
     );
+    debugPrint("hash: $hash");
     final String hmacData = generateHMACData(
       nonce: nonce,
       hash: hash,

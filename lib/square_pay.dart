@@ -6,7 +6,7 @@ import "dart:convert";
 import "morokoshi_future_builder.dart";
 import "package:http/http.dart" as http;
 
-enum TenderTypes {
+enum SquareTenderTypes {
   creditCard,
   cash,
   other,
@@ -14,23 +14,23 @@ enum TenderTypes {
   cardOnFile,
 }
 
-extension on List<TenderTypes> {
+extension on List<SquareTenderTypes> {
   Iterable<String> toJson() sync* {
     for (final tenderType in this) {
       switch (tenderType) {
-        case TenderTypes.creditCard:
+        case SquareTenderTypes.creditCard:
           yield "CREDIT_CARD";
           break;
-        case TenderTypes.cash:
+        case SquareTenderTypes.cash:
           yield "CASH";
           break;
-        case TenderTypes.other:
+        case SquareTenderTypes.other:
           yield "OTHER";
           break;
-        case TenderTypes.squareGiftCard:
+        case SquareTenderTypes.squareGiftCard:
           yield "SQUARE_GIFT_CARD";
           break;
-        case TenderTypes.cardOnFile:
+        case SquareTenderTypes.cardOnFile:
           yield "CARD_ON_FILE";
           break;
       }
@@ -53,13 +53,13 @@ class SquarePayOptions {
   final bool skip_receipt;
   final bool clear_default_fees;
   final bool disable_cnp;
-  final List<TenderTypes> supported_tender_types;
+  final List<SquareTenderTypes> supported_tender_types;
   const SquarePayOptions({
     this.auto_return = true,
     this.skip_receipt = true,
     this.clear_default_fees = false,
     this.disable_cnp = true,
-    this.supported_tender_types = TenderTypes.values,
+    this.supported_tender_types = SquareTenderTypes.values,
   });
   Map<String, dynamic> toJson() => {
         'auto_return': auto_return,

@@ -72,14 +72,15 @@ class DisplayQR extends StatelessWidget {
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(100.0),
-                  child: QrImage(
-                    size: 300.0,
-                    data: url,
-                    semanticsLabel: "PayPayの支払いQRコード",
-                    embeddedImage: const AssetImage("images/paypay.png"),
+                QrImage(
+                  size: 300.0,
+                  data: url,
+                  semanticsLabel: "PayPayの支払いQRコード",
+                  embeddedImage: const AssetImage("images/paypay.png"),
+                  embeddedImageStyle: QrEmbeddedImageStyle(
+                    size: const Size(50, 50),
                   ),
+                  errorCorrectionLevel: QrErrorCorrectLevel.H,
                 ),
                 PaymentDetailsScreen(
                   merchantPaymentId: createQRCodeBody.merchantPaymentId,

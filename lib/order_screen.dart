@@ -4,7 +4,8 @@ import 'paypay_display_qr.dart';
 import 'dart:math';
 import "morokoshi_cached_network_image.dart";
 import "morokoshi_stream_builder.dart";
-import "morokoshi_future_builder.dart";
+import "square_pay.dart";
+import "square_secret.dart";
 import "package:cloud_firestore/cloud_firestore.dart";
 
 class FoodInfo {
@@ -171,26 +172,33 @@ class FoodWidget extends StatelessWidget {
 }
 
 extension GetFoodAmount on List<FoodCount> {
-  int get amount =>
-      fold(0, (int acc, FoodCount foodCount) => acc + foodCount.count);
+  int get amount => fold(
+        0,
+        (int acc, FoodCount foodCount) =>
+            acc + foodCount.count * foodCount.foodInfo.unitPrice,
+      );
 }
 
 class FoodWidgets extends StatefulWidget {
   const FoodWidgets({
     Key? key,
     required this.foods,
+    required this.shopName,
   }) : super(key: key);
   final List<FoodCount> foods;
+  final String shopName;
   @override
   State<FoodWidgets> createState() => _FoodWidgetsState();
 }
 
 class _FoodWidgetsState extends State<FoodWidgets> {
   late final List<FoodCount> _foods;
+  late final String _shopName;
   @override
   void initState() {
     super.initState();
     _foods = widget.foods;
+    _shopName = widget.shopName;
   }
 
   @override
@@ -234,144 +242,169 @@ class _FoodWidgetsState extends State<FoodWidgets> {
           ),
         ),
         SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           scrollDirection: Axis.horizontal,
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: DataTable(
-                      columns: const <DataColumn>[
-                        DataColumn(
-                          label: Text("商品名"),
-                        ),
-                        DataColumn(
-                          label: Text("単価"),
-                          numeric: true,
-                        ),
-                        DataColumn(
-                          label: Text("個数"),
-                          numeric: true,
-                        ),
-                        DataColumn(
-                          label: Text("合計"),
-                          numeric: true,
-                        ),
-                      ],
-                      rows: <DataRow>[
-                        for (final foodCount in _foods)
-                          if (foodCount.count > 0)
-                            //　ここあるとボタンの位置が変わっちゃうんだよな
-                            DataRow(
-                              cells: <DataCell>[
-                                DataCell(
-                                  Text(foodCount.foodInfo.name),
+          child: ConstrainedBox(
+            constraints:
+                BoxConstraints(minWidth: MediaQuery.of(context).size.width),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: DataTable(
+                        columns: const <DataColumn>[
+                          DataColumn(
+                            label: Text("商品名"),
+                          ),
+                          DataColumn(
+                            label: Text("単価"),
+                            numeric: true,
+                          ),
+                          DataColumn(
+                            label: Text("個数"),
+                            numeric: true,
+                          ),
+                          DataColumn(
+                            label: Text("合計"),
+                            numeric: true,
+                          ),
+                        ],
+                        rows: <DataRow>[
+                          for (final foodCount in _foods)
+                            if (foodCount.count > 0)
+                              //　ここあるとボタンの位置が変わっちゃうんだよな
+                              DataRow(
+                                cells: <DataCell>[
+                                  DataCell(
+                                    Text(foodCount.foodInfo.name),
+                                  ),
+                                  DataCell(
+                                    Text('${foodCount.foodInfo.unitPrice}円'),
+                                  ),
+                                  DataCell(
+                                    Text('${foodCount.count}'),
+                                    // showEditIcon: true,
+                                    onTap: () {
+                                      setState(() {
+                                        foodCount.count = 0;
+                                      });
+                                    },
+                                  ),
+                                  DataCell(
+                                    Text(
+                                        '${foodCount.foodInfo.unitPrice * foodCount.count}円'),
+                                  ),
+                                ],
+                              ),
+                          DataRow(
+                            cells: <DataCell>[
+                              const DataCell(
+                                Text('合計'),
+                              ),
+                              const DataCell(
+                                Text('-'),
+                              ),
+                              DataCell(
+                                Text(
+                                  '${_foods.fold(0, (int a, FoodCount b) => a + b.count)}個',
+                                ), //これGitHub Copilotが書いてくれたんだけど　すげえ
+                              ),
+                              DataCell(
+                                Text(
+                                  '${_foods.amount}円',
+                                ), //これも　プログラマーはもういらないわ
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical:8.0),
+                    child: Wrap(direction: Axis.vertical,
+                      alignment: WrapAlignment.center,
+                      runAlignment: WrapAlignment.center,
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PayPayDisplayQRContainer(
+                                    payPayCreateQRCodeBody:
+                                        PayPayCreateQRCodeBody(
+                                      merchantPaymentId: DateTime.now()
+                                          .millisecondsSinceEpoch
+                                          .toString(),
+                                      orderItems: _foods
+                                          .where((FoodCount f) => f.count > 0)
+                                          .map((FoodCount f) =>
+                                              f.toPayPayOrderItem())
+                                          .toList(),
+                                      amount: PayPayMoneyAmount(
+                                          amount: _foods.amount),
+                                      requestedAt: (DateTime.now()
+                                              .millisecondsSinceEpoch ~/
+                                          1000),
+                                    ),
+                                  ),
                                 ),
-                                DataCell(
-                                  Text('${foodCount.foodInfo.unitPrice}円'),
+                              );
+                            },
+                            icon: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Hero(
+                                tag: "PayPay",
+                                child:
+                                    Image.asset("images/paypay.png", width: 32),
+                              ),
+                            ),
+                            label: const Text("PayPayで支払う"),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              SquarePay(
+                                client_id: squareClientID,
+                                amount_money: SquareMoneyAmount(
+                                  amount: _foods.amount,
                                 ),
-                                DataCell(
-                                  Text('${foodCount.count}'),
-                                  // showEditIcon: true,
-                                  onTap: () {
-                                    setState(() {
-                                      foodCount.count = 0;
-                                    });
-                                  },
-                                ),
-                                DataCell(
-                                  Text(
-                                      '${foodCount.foodInfo.unitPrice * foodCount.count}円'),
-                                ),
-                              ],
+                                callback_url: squareCallbackURL,
+                                location_id: squareLocationID,
+                                notes: _shopName,
+                                options: const SquarePayOptions(),
+                              ).pay();
+                            },
+                            icon: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Hero(
+                                tag: "Square",
+                                child:
+                                    Image.asset("images/square.png", width: 32),
+                              ),
                             ),
-                        DataRow(
-                          cells: <DataCell>[
-                            const DataCell(
-                              Text('合計'),
-                            ),
-                            const DataCell(
-                              Text('-'),
-                            ),
-                            DataCell(
-                              Text(
-                                '${_foods.fold(0, (int a, FoodCount b) => a + b.count)}個',
-                              ), //これGitHub Copilotが書いてくれたんだけど　すげえ
-                            ),
-                            DataCell(
-                              Text(
-                                '${_foods.amount}円',
-                              ), //これも　プログラマーはもういらないわ
-                            ),
-                          ],
+                            label: const Text("Squareで支払う"),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PayPayDisplayQRContainer(
-                                payPayCreateQRCodeBody: PayPayCreateQRCodeBody(
-                                  merchantPaymentId: DateTime.now()
-                                      .millisecondsSinceEpoch
-                                      .toString(),
-                                  orderItems: _foods
-                                      .where((FoodCount f) => f.count > 0)
-                                      .map((FoodCount f) =>
-                                          f.toPayPayOrderItem())
-                                      .toList(),
-                                  amount:
-                                      PayPayMoneyAmount(amount: _foods.amount),
-                                  requestedAt:
-                                      (DateTime.now().millisecondsSinceEpoch ~/
-                                          1000),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                        icon: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Hero(
-                            tag: "PayPay",
-                            child: Image.asset("images/paypay.png", width: 32),
-                          ),
-                        ),
-                        label: const Text("PayPayで支払う"),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Hero(
-                            tag: "Square",
-                            child: Image.asset("images/square.png", width: 32),
-                          ),
-                        ),
-                        label: const Text("Squareで支払う"),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -381,9 +414,13 @@ class _FoodWidgetsState extends State<FoodWidgets> {
 }
 
 class CreatePayment extends StatelessWidget {
-  const CreatePayment({Key? key, required this.foodInfoCollectionReference})
-      : super(key: key);
+  const CreatePayment({
+    Key? key,
+    required this.foodInfoCollectionReference,
+    required this.shopName,
+  }) : super(key: key);
   final CollectionReference<FoodInfo> foodInfoCollectionReference;
+  final String shopName;
 
   @override
   Widget build(BuildContext context) {
@@ -391,6 +428,7 @@ class CreatePayment extends StatelessWidget {
       stream: foodInfoCollectionReference.snapshots(),
       builder: (context, snapshot) {
         return FoodWidgets(
+          shopName: shopName,
           foods: <FoodCount>[
             for (final document in snapshot.data!.docs)
               FoodCount(foodInfo: document.data()),

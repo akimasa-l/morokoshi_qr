@@ -177,7 +177,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         },
                       );
                       await prefs.setInt(
-                          "selectedShopIndex", _selectedShopIndex);
+                        "selectedShopIndex",
+                        _selectedShopIndex,
+                      );
                     },
                     itemBuilder: (context) => [
                       for (final shop in snapshot.data!.docs.asMap().entries)
@@ -192,6 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
               body: <Widget>[
                 CreatePayment(
                   foodInfoCollectionReference: _foodInfoCollectionReference,
+                  shopName: _selectedShop.data().name,
                 ),
                 setting_screen.Settings(
                   foodInfoCollectionReference: _foodInfoCollectionReference,
