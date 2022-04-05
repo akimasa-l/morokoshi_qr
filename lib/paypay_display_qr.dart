@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import "paypayclasses.dart";
+import 'paypay_classes.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import "dart:async";
 import "dart:convert";
 import "pay_finish_button.dart";
-import "paypaysecret.dart";
+import 'paypay_secret.dart';
 
-class DisplayQRContainer extends StatelessWidget {
-  final CreateQRCodeBody createQRCodeBody;
-  const DisplayQRContainer({
+class PayPayDisplayQRContainer extends StatelessWidget {
+  final PayPayCreateQRCodeBody payPayCreateQRCodeBody;
+  const PayPayDisplayQRContainer({
     Key? key,
-    required this.createQRCodeBody,
+    required this.payPayCreateQRCodeBody,
   }) : super(key: key);
 
   // This widget is the root of your application.
@@ -30,10 +30,10 @@ class DisplayQRContainer extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               DisplayQR(
-                createQRCodeBody: createQRCodeBody,
+                createQRCodeBody: payPayCreateQRCodeBody,
               ),
               Text(
-                "お支払い金額 : ${createQRCodeBody.amount.amount}円",
+                "お支払い金額 : ${payPayCreateQRCodeBody.amount.amount}円",
                 style: Theme.of(context).textTheme.headline4,
               ),
               // 戻るボタン
@@ -47,7 +47,7 @@ class DisplayQRContainer extends StatelessWidget {
 }
 
 class DisplayQR extends StatelessWidget {
-  final CreateQRCodeBody createQRCodeBody;
+  final PayPayCreateQRCodeBody createQRCodeBody;
   const DisplayQR({
     Key? key,
     required this.createQRCodeBody,

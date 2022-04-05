@@ -1,9 +1,10 @@
 import "package:flutter/material.dart";
-import 'paypayclasses.dart';
-import "display_qr.dart";
+import 'paypay_classes.dart';
+import 'paypay_display_qr.dart';
 import 'dart:math';
 import "morokoshi_cached_network_image.dart";
 import "morokoshi_stream_builder.dart";
+import "morokoshi_future_builder.dart";
 import "package:cloud_firestore/cloud_firestore.dart";
 
 class FoodInfo {
@@ -69,7 +70,7 @@ class FoodCount {
   PayPayOrderItem toPayPayOrderItem() {
     return PayPayOrderItem(
       name: foodInfo.name,
-      unitPrice: MoneyAmount(amount: foodInfo.unitPrice),
+      unitPrice: PayPayMoneyAmount(amount: foodInfo.unitPrice),
       quantity: count,
     );
   }
@@ -314,39 +315,61 @@ class _FoodWidgetsState extends State<FoodWidgets> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DisplayQRContainer(
-                            createQRCodeBody: CreateQRCodeBody(
-                              merchantPaymentId: DateTime.now()
-                                  .millisecondsSinceEpoch
-                                  .toString(),
-                              orderItems: _foods
-                                  .where((FoodCount f) => f.count > 0)
-                                  .map((FoodCount f) => f.toPayPayOrderItem())
-                                  .toList(),
-                              amount: MoneyAmount(amount: _foods.amount),
-                              requestedAt:
-                                  (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PayPayDisplayQRContainer(
+                                payPayCreateQRCodeBody: PayPayCreateQRCodeBody(
+                                  merchantPaymentId: DateTime.now()
+                                      .millisecondsSinceEpoch
+                                      .toString(),
+                                  orderItems: _foods
+                                      .where((FoodCount f) => f.count > 0)
+                                      .map((FoodCount f) =>
+                                          f.toPayPayOrderItem())
+                                      .toList(),
+                                  amount:
+                                      PayPayMoneyAmount(amount: _foods.amount),
+                                  requestedAt:
+                                      (DateTime.now().millisecondsSinceEpoch ~/
+                                          1000),
+                                ),
+                              ),
                             ),
+                          );
+                        },
+                        icon: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Hero(
+                            tag: "PayPay",
+                            child: Image.asset("images/paypay.png", width: 32),
                           ),
                         ),
-                      );
-                    },
-                    icon: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Hero(
-                        tag: "PayPay",
-                        child: Image.asset("images/paypay.png", width: 32),
+                        label: const Text("PayPayで支払う"),
                       ),
                     ),
-                    label: const Text("PayPayで支払う"),
-                  ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: OutlinedButton.icon(
+                        onPressed: () {},
+                        icon: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Hero(
+                            tag: "Square",
+                            child: Image.asset("images/square.png", width: 32),
+                          ),
+                        ),
+                        label: const Text("Squareで支払う"),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:morokoshi_qr/paypayclasses.dart';
+import 'package:morokoshi_qr/paypay_classes.dart';
 
 void main() {
   const paypay = PayPayOPA(

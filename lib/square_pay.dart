@@ -38,10 +38,10 @@ extension on List<TenderTypes> {
   }
 }
 
-class MoneyAmount {
+class SquareMoneyAmount {
   final int amount;
   final String currency_code;
-  const MoneyAmount({required this.amount, this.currency_code = "JPY"});
+  const SquareMoneyAmount({required this.amount, this.currency_code = "JPY"});
   Map<String, dynamic> toJson() => {
         'amount': amount,
         'currency_code': currency_code,
@@ -74,7 +74,7 @@ class SquarePay {
   static const sdk_version = "3.5.0";
   static const version = "1.3";
   final String client_id;
-  final MoneyAmount amount_money;
+  final SquareMoneyAmount amount_money;
   final String callback_url;
   final String location_id;
   final String notes;

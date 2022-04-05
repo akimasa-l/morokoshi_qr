@@ -3,10 +3,10 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 
-class MoneyAmount {
+class PayPayMoneyAmount {
   final int amount;
   final String currency;
-  const MoneyAmount({required this.amount, this.currency = "JPY"});
+  const PayPayMoneyAmount({required this.amount, this.currency = "JPY"});
   dynamic toJson() => {
         'amount': amount,
         'currency': currency,
@@ -16,7 +16,7 @@ class MoneyAmount {
 class PayPayOrderItem {
   final String name, productId, category;
   final int quantity;
-  final MoneyAmount unitPrice;
+  final PayPayMoneyAmount unitPrice;
   const PayPayOrderItem({
     required this.name,
     this.productId = "defaultProductId",
@@ -33,19 +33,19 @@ class PayPayOrderItem {
       };
 }
 
-class CreateQRCodeBody {
+class PayPayCreateQRCodeBody {
   final String merchantPaymentId,
       orderDescription,
       codeType = "ORDER_QR",
       storeInfo,
       storeId,
       terminalId;
-  final MoneyAmount amount;
+  final PayPayMoneyAmount amount;
   final List<PayPayOrderItem> orderItems;
   final dynamic metadata;
   final int requestedAt, authorizationExpiry;
   final bool isAuthorization;
-  const CreateQRCodeBody({
+  const PayPayCreateQRCodeBody({
     required this.merchantPaymentId,
     this.orderDescription = "ここにOrderDescriptionが入るかも",
     this.storeInfo = "ここにStoreInfoが入るかも",
@@ -82,7 +82,7 @@ class PayPayOPA {
     required this.merchantId,
   });
   static const String urlHost = "stg-api.sandbox.paypay.ne.jp";
-  Future<String> createQRCode(CreateQRCodeBody body) async {
+  Future<String> createQRCode(PayPayCreateQRCodeBody body) async {
     const String urlPath = "/v2/codes";
     const String contentType = "application/json;charset=UTF-8";
     final Uri url = Uri(

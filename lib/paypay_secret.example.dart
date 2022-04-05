@@ -1,4 +1,4 @@
-import "paypayclasses.dart";
+import 'paypay_classes.dart';
 
 const payPayClient = PayPayOPA(
   apiKey: "APIKeyGenerated",
